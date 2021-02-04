@@ -2,7 +2,11 @@ from predicate import Predicate
 import numpy as np
 import re
 
-objects = ["rooma", "roomb", "ball1", "ball2", "ball3", "ball4", "left", "right"]
+objects = [
+    "rooma", "roomb",
+    "ball1", "ball2", "ball3", "ball4",
+    "left", "right"
+]
 predicates = [
     "ROOM ?x",          # true iff x is a room
     "BALL ?x",          # true iff x is a ball
@@ -11,7 +15,7 @@ predicates = [
     "at-ball ?x ?y",    # true iff x is a ball, y is a room, and x is in y
     "free ?x",          # true iff x is a gripper and x does not hold a ball
     "carry ?x ?y"       # true iff x is a gripper, y is a ball, and x holds y
-    ]
+]
 
 ws_pattern = re.compile(r'\s+')
 pred = re.sub(ws_pattern, '', predicates[4]).split("?")
