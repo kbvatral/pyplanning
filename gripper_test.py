@@ -1,4 +1,6 @@
+from propositional import AND, GroundedPredicate, OR, NOT
 from predicate import Predicate
+from kb import KnowledgeBase
 import numpy as np
 import re
 
@@ -16,8 +18,27 @@ predicates = [
     "free ?x",          # true iff x is a gripper and x does not hold a ball
     "carry ?x ?y"       # true iff x is a gripper, y is a ball, and x holds y
 ]
+initial = [
+    "ROOM rooma",
+    "ROOM roomb",
+    "BALL ball1",
+    "BALL ball4",
+    "GRIPPER left",
+    "GRIPPER right",
+    "free left",
+    "free right",
+    "at-robby rooma",
+    "at-ball ball1 rooma",
+    "at-ball ball2 rooma",
+    "at-ball ball3 rooma",
+    "at-ball ball4 rooma"
+]
 
-ws_pattern = re.compile(r'\s+')
-pred = re.sub(ws_pattern, '', predicates[4]).split("?")
 
-print(Predicate.from_str("ROOM ?x"))
+kb = KnowledgeBase(objects, predicates)
+kb.teach(initial)
+
+p1 = GroundedPredicate.from_str(kb, "BALL ball1")
+p2 = GroundedPredicate.from_str(kb, "ROOM rooma")
+p3 = GroundedPredicate.from_str(kb, "at-ball ball1 rooma")
+print(kb.query(AND((p1), (p2), (p3))))

@@ -1,5 +1,7 @@
 from collections import defaultdict
-from propositional import AND, OR, GroundedPredicate
+from typing import Iterable
+from propositional import AND, NOT, OR, GroundedPredicate
+from predicate import Predicate
 
 
 class KnowledgeBase:
@@ -9,30 +11,47 @@ class KnowledgeBase:
             raise Warning("Objects with duplicate names were removed.")
 
         self.predicates = dict()
+        if isinstance(predicates, str) or not isinstance(predicates, Iterable):
+            predicates = [predicates]
         for p in predicates:
-            self.predicates[p.name] = p
+            if isinstance(p, str):
+                p_parse = Predicate.from_str(p)
+                self.predicates[p_parse.name] = p_parse
+            elif isinstance(p, Predicate):
+                self.predicates[p.name] = p
+            else:
+                raise TypeError("All predicates must be of type Predicate or a PDDL parsable string")
         if len(self.predicates) != len(predicates):
             raise Warning("Predicates with duplicate names were removed.")
 
         self.knowledge = defaultdict(bool)
 
     def teach(self, p):
-        if not isinstance(p, GroundedPredicate):
-            raise TypeError("p must be of type GroundedPredicate.")
-        self.knowledge[p] = True
+        if isinstance(p, GroundedPredicate):
+            self.knowledge[p] = True
+        elif isinstance(p, str):
+            self.teach(GroundedPredicate.from_str(self, p))
+        elif isinstance(p, Iterable):
+            for p_sub in p:
+                self.teach(p_sub)
+        else:
+            raise TypeError("p must be of type GroundedPredicate or a PDDL parsable string.")
 
     def query(self, q):
         if isinstance(q, GroundedPredicate):
-            res = self.knowledge[str(q)]
+            return self.knowledge[q]
         elif isinstance(q, AND):
-            res = True
             for prop in q.props:
-                res = res and self.query(prop)
+                if not self.query(prop):
+                    return False
+            return True
         elif isinstance(q, OR):
-            res = False
             for prop in q.props:
-                res = res or self.query(prop)
+                if self.query(prop):
+                    return True
+            return False
+        elif isinstance(q, NOT):
+            return not self.query(q.prop)
         else:
             raise TypeError(
                 "Query must be a combination of propositional classes.")
-        return res

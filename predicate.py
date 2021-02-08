@@ -10,10 +10,12 @@ class Predicate:
         self.variables = args
 
     def ground(self, *args):
-        return GroundedPredicate(self, args)
+        return GroundedPredicate(self, *args)
 
     def __repr__(self) -> str:
         return "{} ?{}".format(self.name, " ?".join(self.variables))
+    def __eq__(self, o: object) -> bool:
+        return self.name == o.name and len(self.variables) == len(o.variables)
 
     @staticmethod
     def from_str(str):
