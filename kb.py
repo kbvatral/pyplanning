@@ -1,7 +1,6 @@
 from collections import defaultdict
 from typing import Iterable
-from propositional import AND, NOT, OR, GroundedPredicate
-from predicate import Predicate
+from logic import AND, NOT, OR, Predicate, GroundedPredicate
 
 
 class KnowledgeBase:
@@ -54,4 +53,4 @@ class KnowledgeBase:
             return not self.query(q.prop)
         else:
             raise TypeError(
-                "Query must be a combination of propositional classes.")
+                "Query must be a combination of grounded propositional classes.")

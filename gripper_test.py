@@ -1,5 +1,4 @@
-from propositional import AND, GroundedPredicate, OR, NOT
-from predicate import Predicate
+from logic import Predicate, GroundedPredicate, OR, NOT, AND
 from kb import KnowledgeBase
 import numpy as np
 import re
@@ -41,4 +40,4 @@ kb.teach(initial)
 p1 = GroundedPredicate.from_str(kb, "BALL ball1")
 p2 = GroundedPredicate.from_str(kb, "ROOM rooma")
 p3 = GroundedPredicate.from_str(kb, "at-ball ball1 rooma")
-print(kb.query(AND((p1), (p2), (p3))))
+print(kb.query(AND([p1,p2,p3])))
