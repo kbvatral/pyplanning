@@ -40,7 +40,7 @@ class Predicate(Proposition):
 
 
 class GroundedPredicate(Proposition):
-    def __init__(self, predicate: Predicate, objects: Iterable(str)):
+    def __init__(self, predicate: Predicate, objects: Iterable):
         if len(objects) != len(predicate.variables):
             raise TypeError("Incorrect number of variables: expected {}, got {}".format(
                 len(predicate.variables), len(objects)))
