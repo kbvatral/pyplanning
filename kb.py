@@ -28,6 +28,8 @@ class KnowledgeBase:
     def teach(self, p):
         if isinstance(p, GroundedPredicate):
             self.knowledge[p] = True
+        if isinstance(p, NOT) and isinstance(p.prop, GroundedPredicate):
+            self.knowledge[p.prop] = False
         elif isinstance(p, str):
             self.teach(GroundedPredicate.from_str(self, p))
         elif isinstance(p, Iterable):

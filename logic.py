@@ -4,9 +4,7 @@ from typing import Iterable
 
 
 class Proposition(ABC):
-    @abstractmethod
-    def ground(self, objects):
-        ...
+    pass
 
 
 class Predicate(Proposition):
@@ -24,7 +22,11 @@ class Predicate(Proposition):
     def __repr__(self) -> str:
         return "{} ?{}".format(self.name, " ?".join(self.variables))
 
+    def __hash__(self) -> int:
+        return hash(str(self))
+
     def __eq__(self, o: object) -> bool:
+        # Variable names do not effect equality of predicates
         return self.name == o.name and len(self.variables) == len(o.variables)
 
     @staticmethod
@@ -47,9 +49,6 @@ class GroundedPredicate(Proposition):
 
         self.predicate = predicate
         self.objects = objects
-
-    def ground(self, objects):
-        return self
 
     def __repr__(self) -> str:
         return "{}({})".format(self.predicate.name, ", ".join(self.objects))
@@ -85,9 +84,6 @@ class AND(Proposition):
         self.props = props
         self.count = -1
 
-    def ground(self, objects):
-        return AND([p.ground(objects) for p in self.props])
-
     def __iter__(self):
         self.count = -1
         return self
@@ -107,9 +103,6 @@ class OR(Proposition):
         self.props = props
         self.count = -1
 
-    def ground(self, objects):
-        return OR([p.ground(objects) for p in self.props])
-
     def __iter__(self):
         self.count = -1
         return self
@@ -126,6 +119,3 @@ class NOT(Proposition):
         if not isinstance(prop, Proposition):
             raise TypeError("Argument must be of type Proposition.")
         self.prop = prop
-
-    def ground(self, objects):
-        return NOT(self.prop.ground(objects))
