@@ -33,14 +33,16 @@ initial = [
     "at-ball ball4 rooma"
 ]
 
-domain = Domain(objects, [Predicate.from_str(p) for p in predicates])
-state = KnowledgeState(domain, [GroundedPredicate.from_str(domain, p) for p in initial])
+domain = Domain([Predicate.from_str(p) for p in predicates])
+state = KnowledgeState()
+for p in initial:
+    state.teach(GroundedPredicate.from_str(p))
 
-p1 = GroundedPredicate.from_str(domain, "BALL ball1")
-p2 = GroundedPredicate.from_str(domain, "ROOM rooma")
-p3 = GroundedPredicate.from_str(domain, "ROOM roomb")
-p4 = GroundedPredicate.from_str(domain, "at-ball ball1 rooma")
-p5 = GroundedPredicate.from_str(domain, "at-ball ball1 roomb")
+p1 = GroundedPredicate.from_str("BALL ball1")
+p2 = GroundedPredicate.from_str("ROOM rooma")
+p3 = GroundedPredicate.from_str("ROOM roomb")
+p4 = GroundedPredicate.from_str("at-ball ball1 rooma")
+p5 = GroundedPredicate.from_str("at-ball ball1 roomb")
 
 state2 = state.copy()
 state2.teach(p5)

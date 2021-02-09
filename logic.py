@@ -1,9 +1,11 @@
-from abc import ABC
+from abc import ABC, abstractmethod
 import re
 
 
 class Proposition(ABC):
-    pass
+    @abstractmethod
+    def check_grounded(self):
+        ...
 
 
 class Predicate(Proposition):
@@ -14,19 +16,18 @@ class Predicate(Proposition):
             raise TypeError("Predicates must contain at least one variable.")
         self.name = name
         self.variables = variables
-
-    def ground(self, objects):
-        return GroundedPredicate(self, objects)
-
     def __repr__(self) -> str:
         return "{} ?{}".format(self.name, " ?".join(self.variables))
-
     def __hash__(self) -> int:
         return hash(str(self))
-
     def __eq__(self, o) -> bool:
         # Variable names do not effect equality of predicates
         return self.name == o.name and len(self.variables) == len(o.variables)
+
+    def check_grounded(self):
+        return False
+    def ground(self, objects):
+        return GroundedPredicate(self, objects)
 
     @staticmethod
     def from_str(str):
@@ -48,30 +49,23 @@ class GroundedPredicate(Proposition):
 
         self.predicate = predicate
         self.objects = objects
-
     def __repr__(self) -> str:
         return "{}({})".format(self.predicate.name, ", ".join(self.objects))
-
     def __hash__(self) -> int:
         return hash(str(self))
-
     def __eq__(self, o) -> bool:
         return self.predicate == o.predicate and self.objects == o.objects
 
+    def check_grounded(self):
+        return True
+
     @staticmethod
-    def from_str(domain, p):
+    def from_str(p):
         comp = list(filter(None, p.split()))
         if len(comp) < 2:
             raise ValueError("Incorrect formatting for PDDL-style string.")
-        if comp[0] not in domain.predicates:
-            raise ValueError(
-                "Unable to find a matching predicate in the domain for parsed string: {}".format(comp[0]))
-        for v in comp[1:]:
-            if v not in domain.objects:
-                raise ValueError(
-                    "Unable to find a matching object in the domain for parsed string: {}".format(v))
 
-        predicate = domain.predicates[comp[0]]
+        predicate = Predicate(comp[0], ["x{}".format(i) for i in range(len(comp)-1)])
         return predicate.ground(comp[1:])
 
 
@@ -82,16 +76,20 @@ class AND(Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
         self.count = -1
-
     def __iter__(self):
         self.count = -1
         return self
-
     def __next__(self):
         self.count += 1
         if self.count < len(self.props):
             return self.props[self.count]
         raise StopIteration
+
+    def check_grounded(self):
+        for p in self.props:
+            if not p.check_grounded():
+                return False
+        return True
 
 
 class OR(Proposition):
@@ -101,16 +99,20 @@ class OR(Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
         self.count = -1
-
     def __iter__(self):
         self.count = -1
         return self
-
     def __next__(self):
         self.count += 1
         if self.count < len(self.props):
             return self.props[self.count]
         raise StopIteration
+
+    def check_grounded(self):
+        for p in self.props:
+            if not p.check_grounded():
+                return False
+        return True
 
 
 class NOT(Proposition):
@@ -118,3 +120,6 @@ class NOT(Proposition):
         if not isinstance(prop, Proposition):
             raise TypeError("Argument must be of type Proposition.")
         self.prop = prop
+
+    def check_grounded(self):
+        return self.prop.check_grounded()

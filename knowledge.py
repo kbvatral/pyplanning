@@ -1,13 +1,9 @@
-from typing import Iterable
+from typing import Iterable, Type
 from logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
 
 
 class Domain:
-    def __init__(self, objects, predicates):
-        self.objects = set(objects)
-        if len(self.objects) != len(objects):
-            raise Warning("Objects with duplicate names were removed.")
-
+    def __init__(self, predicates):
         self.predicates = dict()
         for p in predicates:
             if not isinstance(p, Predicate):
@@ -16,19 +12,33 @@ class Domain:
         if len(self.predicates) != len(predicates):
             raise Warning("Predicates with duplicate names were removed.")
 
-        self.knowledge = set()
+class Problem:
+    def __init__(self, domain, objects, initial_state, goal_state):
+        if not isinstance(domain, Domain):
+            raise TypeError("Supplied domain must be of type Domain.")
+        if not isinstance(initial_state, KnowledgeState):
+            raise TypeError("Initial State must be of type KnowledgeState.")
+        if not isinstance(goal_state, Proposition):
+            raise TypeError("Goal state must be of type Proposition.")
+        if not goal_state.check_grounded():
+            raise TypeError("Goal state must be completely grounded.")
+
+        self.domain = domain
+        self.initial_state = initial_state
+        self.goal_state = goal_state
+        self.objects = set(objects)
+        if len(self.objects) != len(objects):
+            raise Warning("Objects with duplicate names were removed.")        
 
 class KnowledgeState:
-    def __init__(self, domain, initial):
-        self.domain = domain
+    def __init__(self):
         self.knowledge = set()
-
-        if initial is not None:
-            for p in initial:
-                self.teach(p)
     
     def copy(self):
-        return KnowledgeState(self.domain, self.knowledge)
+        k = KnowledgeState()
+        for p in self.knowledge:
+            k.teach(p)
+        return k
 
     def teach(self, p):
         if isinstance(p, GroundedPredicate):
