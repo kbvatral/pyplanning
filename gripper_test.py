@@ -1,5 +1,5 @@
 from logic import Predicate, GroundedPredicate, OR, NOT, AND
-from kb import Domain, KnowledgeState
+from knowledge import Domain, KnowledgeState
 import numpy as np
 import re
 

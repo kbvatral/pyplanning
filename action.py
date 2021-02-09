@@ -1,6 +1,5 @@
 from typing import Iterable
 from logic import GroundedPredicate, NOT, Proposition, AND, Predicate, OR
-from kb import KnowledgeBase
 
 
 class Action:
@@ -19,7 +18,7 @@ class Action:
                 raise TypeError("Effect must be a conjunction of only objects of type Predicate or GroundedPredicate")
         self.effect = effect
     
-    def check_preconditions(self, kb: KnowledgeBase, objects):
+    def check_preconditions(self, kb, objects):
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(len(self.parameters), len(objects)))
         mapping = {}
@@ -27,7 +26,7 @@ class Action:
             mapping[param] = obj
         return kb.query(ground_proposition_by_map(self.precondition, mapping))
 
-    def process_effects(self, kb: KnowledgeBase, objects):
+    def process_effects(self, kb, objects):
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(len(self.parameters), len(objects)))
         mapping = {}
@@ -36,7 +35,7 @@ class Action:
         kb.teach(ground_proposition_by_map(self.effect, mapping))
         return kb
     
-    def take_action(self, kb: KnowledgeBase, objects):
+    def take_action(self, kb, objects):
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(len(self.parameters), len(objects)))
         if self.check_preconditions(kb, objects):
