@@ -75,6 +75,8 @@ class AND(Proposition):
             if not isinstance(p, Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
+    def __repr__(self):
+        return "AND{}".format(tuple(self.props))
 
     def check_grounded(self):
         for p in self.props:
@@ -89,6 +91,8 @@ class OR(Proposition):
             if not isinstance(p, Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
+    def __repr__(self):
+        return "OR{}".format(tuple(self.props))
 
     def check_grounded(self):
         for p in self.props:
@@ -102,6 +106,8 @@ class NOT(Proposition):
         if not isinstance(prop, Proposition):
             raise TypeError("Argument must be of type Proposition.")
         self.prop = prop
+    def __repr__(self):
+        return "NOT({})".format(self.prop)
 
     def check_grounded(self):
         return self.prop.check_grounded()

@@ -1,9 +1,9 @@
-from typing import Iterable, Type
 from logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
+from action import Action
 
 
 class Domain:
-    def __init__(self, predicates):
+    def __init__(self, predicates, actions):
         self.predicates = dict()
         for p in predicates:
             if not isinstance(p, Predicate):
@@ -11,6 +11,14 @@ class Domain:
             self.predicates[p.name] = p
         if len(self.predicates) != len(predicates):
             raise Warning("Predicates with duplicate names were removed.")
+
+        self.actions = dict()
+        for a in actions:
+            if not isinstance(a, Action):
+                raise TypeError("All actions must be of type Action.")
+            self.actions[a.name] = a
+        if len(self.actions) != len(actions):
+            raise Warning("Actions with duplicate names were removed.")
 
 class Problem:
     def __init__(self, domain, objects, initial_state, goal_state):
@@ -28,7 +36,10 @@ class Problem:
         self.goal_state = goal_state
         self.objects = set(objects)
         if len(self.objects) != len(objects):
-            raise Warning("Objects with duplicate names were removed.")        
+            raise Warning("Objects with duplicate names were removed.")
+    
+    def check_goal(self, state):
+        return state.query(self.goal_state)
 
 class KnowledgeState:
     def __init__(self):
@@ -67,3 +78,6 @@ class KnowledgeState:
         else:
             raise TypeError(
                 "Query must be a combination of grounded propositional classes.")
+
+    def __repr__(self):
+        return str(self.knowledge)
