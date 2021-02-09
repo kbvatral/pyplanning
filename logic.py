@@ -1,6 +1,5 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 import re
-from typing import Iterable
 
 
 class Proposition(ABC):
@@ -25,7 +24,7 @@ class Predicate(Proposition):
     def __hash__(self) -> int:
         return hash(str(self))
 
-    def __eq__(self, o: object) -> bool:
+    def __eq__(self, o) -> bool:
         # Variable names do not effect equality of predicates
         return self.name == o.name and len(self.variables) == len(o.variables)
 
@@ -42,7 +41,7 @@ class Predicate(Proposition):
 
 
 class GroundedPredicate(Proposition):
-    def __init__(self, predicate: Predicate, objects: Iterable):
+    def __init__(self, predicate, objects):
         if len(objects) != len(predicate.variables):
             raise TypeError("Incorrect number of variables: expected {}, got {}".format(
                 len(predicate.variables), len(objects)))
@@ -56,23 +55,23 @@ class GroundedPredicate(Proposition):
     def __hash__(self) -> int:
         return hash(str(self))
 
-    def __eq__(self, o: object) -> bool:
+    def __eq__(self, o) -> bool:
         return self.predicate == o.predicate and self.objects == o.objects
 
     @staticmethod
-    def from_str(kb, p):
+    def from_str(domain, p):
         comp = list(filter(None, p.split()))
         if len(comp) < 2:
             raise ValueError("Incorrect formatting for PDDL-style string.")
-        if comp[0] not in kb.predicates:
+        if comp[0] not in domain.predicates:
             raise ValueError(
-                "Unable to find a matching predicate in the knowledge base for parsed string: {}".format(comp[0]))
+                "Unable to find a matching predicate in the domain for parsed string: {}".format(comp[0]))
         for v in comp[1:]:
-            if v not in kb.objects:
+            if v not in domain.objects:
                 raise ValueError(
-                    "Unable to find a matching object in the knowledge base for parsed string: {}".format(v))
+                    "Unable to find a matching object in the domain for parsed string: {}".format(v))
 
-        predicate = kb.predicates[comp[0]]
+        predicate = domain.predicates[comp[0]]
         return predicate.ground(comp[1:])
 
 

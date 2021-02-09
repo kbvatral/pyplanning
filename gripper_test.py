@@ -1,5 +1,5 @@
 from logic import Predicate, GroundedPredicate, OR, NOT, AND
-from kb import KnowledgeBase
+from kb import Domain, KnowledgeState
 import numpy as np
 import re
 
@@ -33,11 +33,23 @@ initial = [
     "at-ball ball4 rooma"
 ]
 
+domain = Domain(objects, [Predicate.from_str(p) for p in predicates])
+state = KnowledgeState(domain, [GroundedPredicate.from_str(domain, p) for p in initial])
 
-kb = KnowledgeBase(objects, predicates)
-kb.teach(initial)
+p1 = GroundedPredicate.from_str(domain, "BALL ball1")
+p2 = GroundedPredicate.from_str(domain, "ROOM rooma")
+p3 = GroundedPredicate.from_str(domain, "ROOM roomb")
+p4 = GroundedPredicate.from_str(domain, "at-ball ball1 rooma")
+p5 = GroundedPredicate.from_str(domain, "at-ball ball1 roomb")
 
-p1 = GroundedPredicate.from_str(kb, "BALL ball1")
-p2 = GroundedPredicate.from_str(kb, "ROOM rooma")
-p3 = GroundedPredicate.from_str(kb, "at-ball ball1 rooma")
-print(kb.query(AND([p1,p2,p3])))
+state2 = state.copy()
+state2.teach(p5)
+state2.teach(NOT(p4))
+
+q1 = AND([p1, p2, p3, p4])
+q2 = AND([p1, p2, p3, p5])
+
+print(state.query(q1))
+print(state.query(q2))
+print(state2.query(q1))
+print(state2.query(q2))

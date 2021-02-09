@@ -14,7 +14,7 @@ class Action:
 
         if not isinstance(effect, AND):
             raise TypeError("Effect must be of type AND")
-        for e in effect.props:
+        for e in effect:
             if not isinstance(e, GroundedPredicate) and not isinstance(e, Predicate):
                 raise TypeError("Effect must be a conjunction of only objects of type Predicate or GroundedPredicate")
         self.effect = effect

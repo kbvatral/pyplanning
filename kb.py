@@ -1,46 +1,47 @@
-from collections import defaultdict
 from typing import Iterable
-from logic import AND, NOT, OR, Predicate, GroundedPredicate
+from logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
 
 
-class KnowledgeBase:
+class Domain:
     def __init__(self, objects, predicates):
         self.objects = set(objects)
         if len(self.objects) != len(objects):
             raise Warning("Objects with duplicate names were removed.")
 
         self.predicates = dict()
-        if isinstance(predicates, str) or not isinstance(predicates, Iterable):
-            predicates = [predicates]
         for p in predicates:
-            if isinstance(p, str):
-                p_parse = Predicate.from_str(p)
-                self.predicates[p_parse.name] = p_parse
-            elif isinstance(p, Predicate):
-                self.predicates[p.name] = p
-            else:
-                raise TypeError("All predicates must be of type Predicate or a PDDL parsable string")
+            if not isinstance(p, Predicate):
+                raise TypeError("All predicates must be of type Predicate.")
+            self.predicates[p.name] = p
         if len(self.predicates) != len(predicates):
             raise Warning("Predicates with duplicate names were removed.")
 
-        self.knowledge = defaultdict(bool)
+        self.knowledge = set()
+
+class KnowledgeState:
+    def __init__(self, domain, initial):
+        self.domain = domain
+        self.knowledge = set()
+
+        if initial is not None:
+            for p in initial:
+                self.teach(p)
+    
+    def copy(self):
+        return KnowledgeState(self.domain, self.knowledge)
 
     def teach(self, p):
         if isinstance(p, GroundedPredicate):
-            self.knowledge[p] = True
-        if isinstance(p, NOT) and isinstance(p.prop, GroundedPredicate):
-            self.knowledge[p.prop] = False
-        elif isinstance(p, str):
-            self.teach(GroundedPredicate.from_str(self, p))
-        elif isinstance(p, Iterable):
-            for p_sub in p:
-                self.teach(p_sub)
+            self.knowledge.add(p)
+        elif isinstance(p, NOT) and isinstance(p.prop, GroundedPredicate):
+            if p.prop in self.knowledge:
+                self.knowledge.remove(p.prop)
         else:
-            raise TypeError("p must be of type GroundedPredicate or a PDDL parsable string.")
+            raise TypeError("p must be a GroundedPredicate.")
 
     def query(self, q):
         if isinstance(q, GroundedPredicate):
-            return self.knowledge[q]
+            return (q in self.knowledge)
         elif isinstance(q, AND):
             for prop in q.props:
                 if not self.query(prop):
