@@ -75,15 +75,6 @@ class AND(Proposition):
             if not isinstance(p, Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
-        self.count = -1
-    def __iter__(self):
-        self.count = -1
-        return self
-    def __next__(self):
-        self.count += 1
-        if self.count < len(self.props):
-            return self.props[self.count]
-        raise StopIteration
 
     def check_grounded(self):
         for p in self.props:
@@ -98,15 +89,6 @@ class OR(Proposition):
             if not isinstance(p, Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
-        self.count = -1
-    def __iter__(self):
-        self.count = -1
-        return self
-    def __next__(self):
-        self.count += 1
-        if self.count < len(self.props):
-            return self.props[self.count]
-        raise StopIteration
 
     def check_grounded(self):
         for p in self.props:
