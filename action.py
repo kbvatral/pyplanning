@@ -5,19 +5,25 @@ class Action:
     def __init__(self, name, parameters, precondition, effect):
         self.name = name
         self.parameters = parameters
+        if self.parameters is None:
+            self.parameters = []
 
-        if not isinstance(precondition, Proposition):
+        if not isinstance(precondition, Proposition) and precondition is not None:
             raise TypeError("Precondition must be of type Proposition")
         self.precondition = precondition
 
-        if not isinstance(effect, AND):
-            raise TypeError("Effect must be of type AND")
-        for e in effect.props:
-            if not is_teachable(e):
-                raise TypeError("Effect must be a conjunction of only objects of teachable predicates.")
+        if effect is not None:
+            if not isinstance(effect, AND):
+                raise TypeError("Effect must be of type AND")
+            for e in effect.props:
+                if not is_teachable(e):
+                    raise TypeError("Effect must be a conjunction of only objects of teachable predicates.")
         self.effect = effect
     
     def check_preconditions(self, state, objects):
+        if self.precondition is None:
+            return True
+
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(len(self.parameters), len(objects)))
         mapping = {}
@@ -27,6 +33,9 @@ class Action:
         return state.query(ground_pre)
 
     def process_effects(self, state, objects):
+        if self.effect is None:
+            return state.copy()
+            
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(len(self.parameters), len(objects)))
         mapping = {}

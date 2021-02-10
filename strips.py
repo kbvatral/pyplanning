@@ -3,7 +3,8 @@ from action import Action
 
 
 class Domain:
-    def __init__(self, predicates, actions):
+    def __init__(self, name, predicates, actions):
+        self.name = name
         self.predicates = dict()
         for p in predicates:
             if not isinstance(p, Predicate):

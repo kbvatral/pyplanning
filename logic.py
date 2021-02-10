@@ -30,10 +30,10 @@ class Predicate(Proposition):
         return GroundedPredicate(self, objects)
 
     @staticmethod
-    def from_str(str):
+    def from_str(s):
         # remove whitespace with re and potential empty variable names with filter none
         ws_pattern = re.compile(r'\s+')
-        pred = list(filter(None, re.sub(ws_pattern, '', str).split("?")))
+        pred = list(filter(None, re.sub(ws_pattern, '', s).split("?")))
 
         if len(pred) < 2:
             raise ValueError(
