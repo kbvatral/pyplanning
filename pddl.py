@@ -5,7 +5,9 @@ import re
 from strips import Domain, KnowledgeState, Problem
 
 def load_pddl(domain_file, problem_file):
-    pass
+    domain = load_domain(domain_file)
+    problem = load_problem(domain, problem_file)
+    return domain, problem
 
 def load_problem(domain, problem_file):
     all_text = ""
