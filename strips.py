@@ -46,6 +46,9 @@ class Problem:
 class KnowledgeState:
     def __init__(self):
         self.knowledge = set()
+    def __eq__(self, o):
+        diff = self.knowledge.difference(o.knowledge)
+        return len(diff) == 0
     
     def copy(self):
         k = KnowledgeState()

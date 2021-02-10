@@ -7,6 +7,7 @@ class Action:
         self.parameters = parameters
         if self.parameters is None:
             self.parameters = []
+        self.num_params = len(self.parameters)
 
         if not isinstance(precondition, Proposition) and precondition is not None:
             raise TypeError("Precondition must be of type Proposition")
@@ -53,6 +54,22 @@ class Action:
         if self.check_preconditions(state, objects):
             return True, self.process_effects(state, objects)
         return False, state
+
+    def ground(self, objects):
+        return GroundedAction(self, objects)
+
+
+class GroundedAction:
+    def __init__(self, action, objects):
+        if len(objects) != action.num_params:
+            raise TypeError("Incorrect number of variables: expected {}, got {}".format(
+                action.num_params, len(objects)))
+
+        self.action = action
+        self.objects = objects
+    def __repr__(self) -> str:
+        return "{}({})".format(self.action.name, ", ".join(self.objects))
+
 
 def ground_proposition_by_map(prop, variable_map):
     if isinstance(prop, Predicate):
