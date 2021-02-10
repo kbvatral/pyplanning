@@ -22,7 +22,7 @@ class Domain:
             raise Warning("Actions with duplicate names were removed.")
 
 class Problem:
-    def __init__(self, domain, objects, initial_state, goal_state):
+    def __init__(self, name, domain, objects, initial_state, goal_state):
         if not isinstance(domain, Domain):
             raise TypeError("Supplied domain must be of type Domain.")
         if not isinstance(initial_state, KnowledgeState):
@@ -32,6 +32,7 @@ class Problem:
         if not goal_state.check_grounded():
             raise TypeError("Goal state must be completely grounded.")
 
+        self.name = name
         self.domain = domain
         self.initial_state = initial_state
         self.goal_state = goal_state
