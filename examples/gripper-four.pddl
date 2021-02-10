@@ -1,5 +1,4 @@
-(define (problem move_to_b)
-    (:domain gripper)
+(define (problem move_to_b) (:domain gripper)
     (:objects 
         rooma roomb 
         ball1 ball2 ball3 ball4 

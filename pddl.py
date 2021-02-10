@@ -4,6 +4,8 @@ from utils import TextTree
 import re
 from strips import Domain, KnowledgeState, Problem
 
+supported_requirements = {":strips"}
+
 def load_pddl(domain_file, problem_file):
     domain = load_domain(domain_file)
     problem = load_problem(domain, problem_file)
@@ -69,7 +71,9 @@ def load_domain(domain_file):
         if text_split[0].lower() == "domain":
             domain_name = text_split[1]
         elif text_split[0].lower() == ":requirements":
-            pass
+            for req in text_split[1:]:
+                if req.lower() not in supported_requirements:
+                    raise NotImplementedError("The requirement '{}' is not yet supported.".format(req))
         elif text_split[0].lower() == ":predicates":
             for pred in child.children:
                 predicates.append(Predicate.from_str(pred.text))

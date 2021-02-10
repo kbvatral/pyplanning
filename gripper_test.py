@@ -6,7 +6,7 @@ pickup_action = problem.domain.actions['pickup']
 drop_action = problem.domain.actions['drop']
 move_action = problem.domain.actions['move']
 
-actions = [
+solution = [
     (pickup_action, ["ball1", "rooma", "left"]),
     (pickup_action, ["ball2", "rooma", "right"]),
     (move_action, ["rooma", "roomb"]),
@@ -22,6 +22,6 @@ actions = [
 
 current_state = problem.initial_state
 print(problem.check_goal(current_state))
-for a, o in actions:
+for a, o in solution:
     res, current_state = a.take_action(current_state, o)
     print(problem.check_goal(current_state))
