@@ -1,6 +1,6 @@
 from logic import Predicate, GroundedPredicate, OR, NOT, AND
 from action import Action
-from knowledge import Domain, KnowledgeState, Problem
+from strips import Domain, KnowledgeState, Problem
 import numpy as np
 import re
 
