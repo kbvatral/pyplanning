@@ -16,16 +16,20 @@ class Predicate(Proposition):
             raise TypeError("Predicates must contain at least one variable.")
         self.name = name
         self.variables = variables
+
     def __repr__(self) -> str:
         return "{} ?{}".format(self.name, " ?".join(self.variables))
+
     def __hash__(self) -> int:
         return hash(str(self))
+
     def __eq__(self, o) -> bool:
         # Variable names do not effect equality of predicates
         return self.name == o.name and len(self.variables) == len(o.variables)
 
     def check_grounded(self):
         return False
+
     def ground(self, objects):
         return GroundedPredicate(self, objects)
 
@@ -49,10 +53,13 @@ class GroundedPredicate(Proposition):
 
         self.predicate = predicate
         self.objects = objects
+
     def __repr__(self) -> str:
         return "{}({})".format(self.predicate.name, ", ".join(self.objects))
+
     def __hash__(self) -> int:
         return hash(str(self))
+
     def __eq__(self, o) -> bool:
         return self.predicate == o.predicate and self.objects == o.objects
 
@@ -65,7 +72,8 @@ class GroundedPredicate(Proposition):
         if len(comp) < 2:
             raise ValueError("Incorrect formatting for PDDL-style string.")
 
-        predicate = Predicate(comp[0], ["x{}".format(i) for i in range(len(comp)-1)])
+        predicate = Predicate(comp[0], ["x{}".format(i)
+                                        for i in range(len(comp)-1)])
         return predicate.ground(comp[1:])
 
 
@@ -75,6 +83,7 @@ class AND(Proposition):
             if not isinstance(p, Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
+
     def __repr__(self):
         return "AND{}".format(tuple(self.props))
 
@@ -91,6 +100,7 @@ class OR(Proposition):
             if not isinstance(p, Proposition):
                 raise TypeError("All arguments must be of type Proposition.")
         self.props = props
+
     def __repr__(self):
         return "OR{}".format(tuple(self.props))
 
@@ -106,8 +116,15 @@ class NOT(Proposition):
         if not isinstance(prop, Proposition):
             raise TypeError("Argument must be of type Proposition.")
         self.prop = prop
+
     def __repr__(self):
         return "NOT({})".format(self.prop)
+
+    def __eq__(self, o):
+        return isinstance(o, NOT) and o.prop == self.prop
+
+    def __hash__(self):
+        return hash(str(self))
 
     def check_grounded(self):
         return self.prop.check_grounded()
