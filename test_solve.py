@@ -1,8 +1,8 @@
 from pddl import load_pddl
-from bfs_solver import bfs_solve
+from search_solver import search_solve
 
 #domain, problem = load_pddl("examples/blocksworld.pddl", "examples/stack-blocks.pddl")
 domain, problem = load_pddl("examples/gripper.pddl", "examples/gripper-four.pddl")
 
-plan = bfs_solve(problem)
+plan = search_solve(problem)
 print(plan)

@@ -1,22 +1,29 @@
 from strips import KnowledgeState, Problem
 import itertools
+import heapq
 
-def bfs_solve(problem: Problem):
-    visited = []
-    queue = [(problem.initial_state, [])]
+def null_heuristic(state):
+    return 0
 
-    while len(queue) > 0:
-        s, plan = queue.pop(0)
+def search_solve(problem: Problem, heuristic=null_heuristic):
+    visited = set()
+    fringe = [(heuristic(problem.initial_state), 0, problem.initial_state, [])]
+    heapq.heapify(fringe)
+    fringe_count = 1 # used to tie-break costs based on add order
+
+    while len(fringe) > 0:
+        _, _, s, plan = heapq.heappop(fringe)
         if s in visited:
             continue
-        visited.append(s)
+        visited.add(s)
         if problem.check_goal(s):
             return plan
 
         for a, next_ks in generate_next_states(problem, s):
             if next_ks not in visited:
                 new_plan = plan + [a]
-                queue.append((next_ks, new_plan))
+                heapq.heappush(fringe, (heuristic(next_ks), fringe_count, next_ks, new_plan))
+                fringe_count += 1
     return None
 
 def generate_next_states(problem: Problem, state: KnowledgeState):
