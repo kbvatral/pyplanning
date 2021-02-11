@@ -1,1 +1,3 @@
-from .search import search_solve
+from .search import search_plan
+from . import search
+from . import heuristics

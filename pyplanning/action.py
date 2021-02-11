@@ -48,12 +48,12 @@ class Action:
         ground_effect = ground_proposition_by_map(self.effect, mapping)
         return state.teach(ground_effect.props, delete_method)
 
-    def take_action(self, state, objects):
+    def take_action(self, state, objects, delete_method="delete"):
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(
                 len(self.parameters), len(objects)))
         if self.check_preconditions(state, objects):
-            return True, self.process_effects(state, objects)
+            return True, self.process_effects(state, objects, delete_method)
         return False, state
 
     def ground(self, objects):
