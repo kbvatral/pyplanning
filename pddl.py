@@ -42,8 +42,7 @@ def load_problem(domain, problem_file):
             initial = []
             for pred in child.children:
                 initial.append(GroundedPredicate.from_str(pred.text))
-            for i in initial:
-                initial_state.teach(i)
+            initial_state = initial_state.teach(initial)
         elif text_split[0].lower() == ":goal":
             goal_state = process_proposition_nodes(child.children[0], grounded=True)
         else:

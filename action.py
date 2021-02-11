@@ -35,7 +35,7 @@ class Action:
 
     def process_effects(self, state, objects):
         if self.effect is None:
-            return state.copy()
+            return state.teach([])
             
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(len(self.parameters), len(objects)))
@@ -43,10 +43,7 @@ class Action:
         for param, obj in zip(self.parameters, objects):
             mapping[param] = obj
         ground_effect = ground_proposition_by_map(self.effect, mapping)
-        state_new = state.copy()
-        for e in ground_effect.props:
-            state_new.teach(e)
-        return state_new
+        return state.teach(ground_effect.props)
     
     def take_action(self, state, objects):
         if len(objects) != len(self.parameters):

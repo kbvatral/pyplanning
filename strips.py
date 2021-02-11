@@ -1,3 +1,4 @@
+from typing import Iterable
 from logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
 from action import Action
 
@@ -44,26 +45,27 @@ class Problem:
         return state.query(self.goal_state)
 
 class KnowledgeState:
-    def __init__(self):
-        self.knowledge = set()
+    def __init__(self, knowledge=[]):
+        self.knowledge = frozenset(knowledge)
     def __eq__(self, o):
-        diff = self.knowledge.difference(o.knowledge)
-        return len(diff) == 0
-    
-    def copy(self):
-        k = KnowledgeState()
-        for p in self.knowledge:
-            k.teach(p)
-        return k
+        return self.knowledge == o.knowledge
+    def __hash__(self) -> int:
+        return hash(self.knowledge)
 
     def teach(self, p):
-        if isinstance(p, GroundedPredicate):
-            self.knowledge.add(p)
-        elif isinstance(p, NOT) and isinstance(p.prop, GroundedPredicate):
-            if p.prop in self.knowledge:
-                self.knowledge.remove(p.prop)
-        else:
-            raise TypeError("p must be a GroundedPredicate.")
+        if not isinstance(p, Iterable):
+            p = [p]
+        new_knowledge = set(self.knowledge)
+
+        for prop in p:
+            if isinstance(prop, GroundedPredicate):
+                new_knowledge.add(prop)
+            elif isinstance(prop, NOT) and isinstance(prop.prop, GroundedPredicate):
+                if prop.prop in self.knowledge:
+                    new_knowledge.remove(prop.prop)
+            else:
+                raise TypeError("p must be a list of GroundedPredicate.")
+        return KnowledgeState(new_knowledge)
 
     def query(self, q):
         if isinstance(q, GroundedPredicate):

@@ -11,13 +11,13 @@ def bfs_solve(problem: Problem):
             continue
         visited.append(s)
         if problem.check_goal(s):
-            return True, plan
+            return plan
 
         for a, next_ks in generate_next_states(problem, s):
             if next_ks not in visited:
                 new_plan = plan + [a]
                 queue.append((next_ks, new_plan))
-    return False, []
+    return None
 
 def generate_next_states(problem: Problem, state: KnowledgeState):
     next_states = []
