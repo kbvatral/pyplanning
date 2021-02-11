@@ -1,6 +1,6 @@
 from typing import Iterable
-from logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
-from action import Action
+from .logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
+from .action import Action
 
 
 class Domain:

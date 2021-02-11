@@ -1,4 +1,4 @@
-from strips import KnowledgeState, Problem
+from .strips import KnowledgeState, Problem
 import itertools
 import heapq
 

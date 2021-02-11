@@ -1,4 +1,4 @@
-from logic import GroundedPredicate, NOT, Proposition, AND, Predicate, OR
+from .logic import GroundedPredicate, NOT, Proposition, AND, Predicate, OR
 
 
 class Action:

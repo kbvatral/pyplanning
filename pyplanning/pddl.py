@@ -1,8 +1,8 @@
-from logic import AND, NOT, OR, Predicate, GroundedPredicate
-from action import Action
-from utils import TextTree
+from .logic import AND, NOT, OR, Predicate, GroundedPredicate
+from .action import Action
+from .utils import TextTree
 import re
-from strips import Domain, KnowledgeState, Problem
+from .strips import Domain, KnowledgeState, Problem
 
 supported_requirements = {":strips"}
 
