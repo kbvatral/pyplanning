@@ -7,6 +7,8 @@ def bfs_solve(problem: Problem):
 
     while len(queue) > 0:
         s, plan = queue.pop(0)
+        if s in visited:
+            continue
         visited.append(s)
         if problem.check_goal(s):
             return True, plan
