@@ -1,3 +1,5 @@
+import heapq
+
 class TextTree:
     def __init__(self, text):
         self.raw_text = text
@@ -34,3 +36,18 @@ class TextTreeNode:
         self.text += c
     def add_child(self, child):
         self.children.append(child)
+
+class PriorityQueue:
+    def __init__(self):
+        self.fringe = []
+        heapq.heapify(self.fringe)
+        self.fringe_count = 0
+
+    def push(self, item, priority):
+        item_tuple = (priority, self.fringe_count, item)
+        heapq.heappush(self.fringe, item_tuple)
+        self.fringe_count += 1
+
+    def pop(self):
+        _, _, item = heapq.heappop(self.fringe)
+        return item

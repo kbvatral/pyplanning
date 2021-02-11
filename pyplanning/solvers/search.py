@@ -1,18 +1,18 @@
 from ..strips import KnowledgeState, Problem
 import itertools
 import heapq
+from ..utils import PriorityQueue
 
 def null_heuristic(state):
     return 0
 
 def search_solve(problem: Problem, heuristic=null_heuristic):
     visited = set()
-    fringe = [(heuristic(problem.initial_state), 0, problem.initial_state, [])]
-    heapq.heapify(fringe)
-    fringe_count = 1 # used to tie-break costs based on add order
+    fringe = PriorityQueue()
+    fringe.push((problem.initial_state, []), heuristic(problem.initial_state))
 
     while len(fringe) > 0:
-        _, _, s, plan = heapq.heappop(fringe)
+        s, plan = fringe.pop()
         if s in visited:
             continue
         visited.add(s)
@@ -22,8 +22,7 @@ def search_solve(problem: Problem, heuristic=null_heuristic):
         for a, next_ks in generate_next_states(problem, s):
             if next_ks not in visited:
                 new_plan = plan + [a]
-                heapq.heappush(fringe, (heuristic(next_ks), fringe_count, next_ks, new_plan))
-                fringe_count += 1
+                fringe.push((next_ks, new_plan), heuristic(next_ks))
     return None
 
 def generate_next_states(problem: Problem, state: KnowledgeState):
