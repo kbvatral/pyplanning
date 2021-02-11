@@ -1,10 +1,8 @@
 from ..strips import KnowledgeState, Problem
 import itertools
-import heapq
 from ..utils import PriorityQueue
+from .heuristics import null_heuristic
 
-def null_heuristic(state):
-    return 0
 
 def search_solve(problem: Problem, heuristic=null_heuristic):
     visited = set()
@@ -24,6 +22,7 @@ def search_solve(problem: Problem, heuristic=null_heuristic):
                 new_plan = plan + [a]
                 fringe.push((next_ks, new_plan), heuristic(next_ks))
     return None
+
 
 def generate_next_states(problem: Problem, state: KnowledgeState):
     next_states = []

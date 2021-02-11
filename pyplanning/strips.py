@@ -22,6 +22,7 @@ class Domain:
         if len(self.actions) != len(actions):
             raise Warning("Actions with duplicate names were removed.")
 
+
 class Problem:
     def __init__(self, name, domain, objects, initial_state, goal_state):
         if not isinstance(domain, Domain):
@@ -40,19 +41,22 @@ class Problem:
         self.objects = set(objects)
         if len(self.objects) != len(objects):
             raise Warning("Objects with duplicate names were removed.")
-    
+
     def check_goal(self, state):
         return state.query(self.goal_state)
+
 
 class KnowledgeState:
     def __init__(self, knowledge=[]):
         self.knowledge = frozenset(knowledge)
+
     def __eq__(self, o):
         return self.knowledge == o.knowledge
+
     def __hash__(self) -> int:
         return hash(self.knowledge)
 
-    def teach(self, p):
+    def teach(self, p, delete_method="delete"):
         if not isinstance(p, Iterable):
             p = [p]
         new_knowledge = set(self.knowledge)
@@ -61,8 +65,16 @@ class KnowledgeState:
             if isinstance(prop, GroundedPredicate):
                 new_knowledge.add(prop)
             elif isinstance(prop, NOT) and isinstance(prop.prop, GroundedPredicate):
-                if prop.prop in self.knowledge:
-                    new_knowledge.remove(prop.prop)
+                if delete_method.lower() == "delete":
+                    if prop.prop in self.knowledge:
+                        new_knowledge.remove(prop.prop)
+                elif delete_method.lower() == "add":
+                    new_knowledge.add(prop)
+                elif delete_method.lower() == "ignore":
+                    pass
+                else:
+                    raise ValueError(
+                        "Unrecognized delete method. Method must be one of 'delete', 'add', or 'ignore'.")
             else:
                 raise TypeError("p must be a list of GroundedPredicate.")
         return KnowledgeState(new_knowledge)
