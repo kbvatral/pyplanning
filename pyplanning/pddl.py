@@ -1,4 +1,4 @@
-from .logic import AND, NOT, OR, Predicate, GroundedPredicate
+from .logic import AND, NOT, OR, Predicate
 from .action import Action
 from .utils import TextTree
 import re
@@ -12,6 +12,7 @@ def load_pddl(domain_file, problem_file):
     problem = load_problem(domain, problem_file)
     return domain, problem
 
+
 def strip_comments(lines):
     strip_comments = []
     for l in lines:
@@ -21,6 +22,7 @@ def strip_comments(lines):
         else:
             strip_comments.append(l[:idx])
     return strip_comments
+
 
 def load_problem(domain, problem_file):
     all_text = ""
@@ -54,11 +56,17 @@ def load_problem(domain, problem_file):
         elif text_split[0].lower() == ":init":
             initial = []
             for pred in child.children:
-                initial.append(GroundedPredicate.from_str(pred.text))
+                i = Predicate.from_str(pred.text)
+                if i.check_grounded():
+                    initial.append(i)
+                else:
+                    raise SyntaxError(
+                        "Initial state must be completely grounded.")
             initial_state = initial_state.teach(initial)
         elif text_split[0].lower() == ":goal":
-            goal_state = process_proposition_nodes(
-                child.children[0], grounded=True)
+            goal_state = process_proposition_nodes(child.children[0])
+            if not goal_state.check_grounded():
+                raise SyntaxError("Goal state must be completely grounded.")
         else:
             raise SyntaxError("Unrecognized keyword: {}".format(text_split[0]))
 
@@ -119,24 +127,16 @@ def load_domain(domain_file):
     return Domain(domain_name, predicates, actions)
 
 
-def process_proposition_nodes(t, grounded=False):
+def process_proposition_nodes(t):
     txt = t.text.replace(" ", "").lower()
     if txt == "and":
-        if len(t.children) < 2:
-            raise SyntaxError(
-                "AND statement must contain at least 2 arguments.")
-        return AND([process_proposition_nodes(c, grounded) for c in t.children])
+        return AND([process_proposition_nodes(c) for c in t.children])
     elif txt == "or":
-        if len(t.children) < 2:
-            raise SyntaxError(
-                "OR statement must contain at least 2 arguments.")
-        return OR([process_proposition_nodes(c, grounded) for c in t.children])
+        return OR([process_proposition_nodes(c) for c in t.children])
     elif txt == "not":
         if len(t.children) != 1:
             raise SyntaxError(
                 "Incorrect number of arguments for NOT statement.")
-        return NOT(process_proposition_nodes(t.children[0], grounded))
+        return NOT(process_proposition_nodes(t.children[0]))
     else:
-        if grounded:
-            return GroundedPredicate.from_str(t.text)
         return Predicate.from_str(t.text)

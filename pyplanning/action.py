@@ -1,4 +1,4 @@
-from .logic import GroundedPredicate, NOT, Proposition, AND, Predicate, OR
+from .logic import NOT, Proposition, AND, Predicate, OR
 
 
 class Action:
@@ -19,7 +19,7 @@ class Action:
             for e in effect.props:
                 if not is_teachable(e):
                     raise TypeError(
-                        "Effect must be a conjunction of only objects of teachable predicates.")
+                        "Effect must be a conjunction of only teachable predicates.")
         self.effect = effect
 
     def check_preconditions(self, state, objects):
@@ -75,16 +75,7 @@ class GroundedAction:
 
 def ground_proposition_by_map(prop, variable_map):
     if isinstance(prop, Predicate):
-        objs = []
-        for var in prop.variables:
-            if var in variable_map:
-                objs.append(variable_map[var])
-            else:
-                raise ValueError(
-                    "Unable to find object for variable {} in the provided mapping.".format(var))
-        return prop.ground(objs)
-    elif isinstance(prop, GroundedPredicate):
-        return prop
+        return prop.ground(variable_map)
     elif isinstance(prop, AND):
         return AND([ground_proposition_by_map(p, variable_map) for p in prop.props])
     elif isinstance(prop, OR):
@@ -96,15 +87,9 @@ def ground_proposition_by_map(prop, variable_map):
 
 
 def is_teachable(prop):
-    if isinstance(prop, NOT) and is_predicate(prop.prop):
+    if isinstance(prop, NOT) and isinstance(prop.prop, Predicate):
         return True
-    elif is_predicate(prop):
+    elif isinstance(prop, Predicate):
         return True
     else:
         return False
-
-
-def is_predicate(prop):
-    if isinstance(prop, Predicate) or isinstance(prop, GroundedPredicate):
-        return True
-    return False

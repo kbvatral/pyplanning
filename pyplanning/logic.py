@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import re
+from typing import Iterable
 
 
 class Proposition(ABC):
@@ -9,72 +10,78 @@ class Proposition(ABC):
 
 
 class Predicate(Proposition):
-    def __init__(self, name, variables):
+    def __init__(self, name, variables, grounding={}):
         if isinstance(variables, str):
             variables = [variables]
         if len(variables) < 0:
             raise TypeError("Predicates must contain at least one variable.")
         self.name = name
         self.variables = variables
+        self.grounding = grounding
 
     def __repr__(self) -> str:
-        return "{} ?{}".format(self.name, " ?".join(self.variables))
+        str_rep = "{} ".format(self.name)
+        for v in self.variables:
+            if v in self.grounding:
+                str_rep += "{} ".format(self.grounding[v])
+            else:
+                str_rep += "?{} ".format(v)
+        return str_rep[:-1]
 
     def __hash__(self) -> int:
         return hash(str(self))
 
     def __eq__(self, o) -> bool:
-        # Variable names do not effect equality of predicates
-        return self.name == o.name and len(self.variables) == len(o.variables)
+        # TODO This method of equality is very hacky ans should be updated
+        if type(o) != type(self):
+            return False
+        return hash(self) == hash(o)
 
     def check_grounded(self):
-        return False
+        for n in self.variables:
+            if n not in self.grounding:
+                return False
+        return True
 
     def ground(self, objects):
-        return GroundedPredicate(self, objects)
+        new_grounding = self.grounding.copy()
+        if isinstance(objects, dict):
+            for k, v in objects.items():
+                if k in self.variables:
+                    new_grounding[k] = v
+        elif isinstance(objects, Iterable):
+            for i, o in enumerate(objects):
+                new_grounding[self.variables[i]] = o
+        else:
+            raise TypeError(
+                "Expected argument `objects` to be an Interable type.")
+        return Predicate(self.name, self.variables, new_grounding)
 
     @staticmethod
     def from_str(s):
-        # remove whitespace with re and potential empty variable names with filter none
-        ws_pattern = re.compile(r'\s+')
-        pred = list(filter(None, re.sub(ws_pattern, '', s).split("?")))
-
+        s = s.replace('\r', '').replace('\n', '')
+        pred = list(filter(None, s.split()))
         if len(pred) < 2:
             raise ValueError(
                 "Incorrect formatting for PDDL-style predicate string.")
-        return Predicate(pred[0], pred[1:])
 
+        name = pred[0]
+        var_names = []
+        grounding = {}
+        for i, p in enumerate(pred[1:]):
+            if p[0] == "?":
+                if len(p) < 2:
+                    raise ValueError(
+                        "Incorrect formatting for PDDL-style predicate string.")
+                if p[1:] in var_names:
+                    raise ValueError("Duplicate variable name found.")
+                var_names.append(p[1:])
+            else:
+                vn = "x{}".format(i)
+                var_names.append(vn)
+                grounding[vn] = p
 
-class GroundedPredicate(Proposition):
-    def __init__(self, predicate, objects):
-        if len(objects) != len(predicate.variables):
-            raise TypeError("Incorrect number of variables: expected {}, got {}".format(
-                len(predicate.variables), len(objects)))
-
-        self.predicate = predicate
-        self.objects = objects
-
-    def __repr__(self) -> str:
-        return "{}({})".format(self.predicate.name, ", ".join(self.objects))
-
-    def __hash__(self) -> int:
-        return hash(str(self))
-
-    def __eq__(self, o) -> bool:
-        return self.predicate == o.predicate and self.objects == o.objects
-
-    def check_grounded(self):
-        return True
-
-    @staticmethod
-    def from_str(p):
-        comp = list(filter(None, p.split()))
-        if len(comp) < 2:
-            raise ValueError("Incorrect formatting for PDDL-style string.")
-
-        predicate = Predicate(comp[0], ["x{}".format(i)
-                                        for i in range(len(comp)-1)])
-        return predicate.ground(comp[1:])
+        return Predicate(name, var_names, grounding)
 
 
 class AND(Proposition):

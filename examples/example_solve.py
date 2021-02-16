@@ -3,7 +3,7 @@ from pyplanning.solvers.heuristics import ignore_delete_heuristic
 import time
 import math
 
-#domain, problem = load_pddl("pddl_files/blocksworld.pddl", "pddl_files/stack-blocks.pddl")
+#domain, problem = pp.load_pddl("pddl_files/blocksworld.pddl", "pddl_files/stack-blocks.pddl")
 domain, problem = pp.load_pddl("pddl_files/gripper.pddl", "pddl_files/gripper-four.pddl")
 
 tic = time.time()

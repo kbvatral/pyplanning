@@ -7,6 +7,7 @@ from .heuristics import null_heuristic
 def search_plan(problem: Problem, heuristic=null_heuristic):
     return __asearch(problem, problem.initial_state, heuristic)
 
+
 def __asearch(problem: Problem, start_state, heuristic=null_heuristic, delete_method="delete"):
     visited = set()
     fringe = PriorityQueue()
