@@ -12,19 +12,22 @@ def load_pddl(domain_file, problem_file):
     problem = load_problem(domain, problem_file)
     return domain, problem
 
+def strip_comments(lines):
+    strip_comments = []
+    for l in lines:
+        idx = l.find(";")
+        if idx == -1:
+            strip_comments.append(l)
+        else:
+            strip_comments.append(l[:idx])
+    return strip_comments
 
 def load_problem(domain, problem_file):
     all_text = ""
     with open(problem_file, "r") as df:
         lines = df.readlines()
-        strip_comments = []
-        for l in lines:
-            idx = l.find(";")
-            if idx == -1:
-                strip_comments.append(l)
-            else:
-                strip_comments.append(l[:idx])
-        all_text = ''.join(strip_comments)
+        lines = strip_comments(lines)
+        all_text = ''.join(lines)
     all_text = all_text.replace('\r', '').replace('\n', '')
     t = TextTree(all_text)
 
@@ -66,6 +69,7 @@ def load_domain(domain_file):
     all_text = ""
     with open(domain_file, "r") as df:
         lines = df.readlines()
+        lines = strip_comments(lines)
         all_text = ''.join(lines)
     all_text = all_text.replace('\r', '').replace('\n', '')
     t = TextTree(all_text)
