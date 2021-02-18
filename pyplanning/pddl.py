@@ -24,15 +24,18 @@ def strip_comments(lines):
     return strip_comments
 
 
-def load_problem(domain, problem_file):
+def load_textTree(text_file):
     all_text = ""
-    with open(problem_file, "r") as df:
+    with open(text_file, "r") as df:
         lines = df.readlines()
         lines = strip_comments(lines)
         all_text = ''.join(lines)
     all_text = all_text.replace('\r', '').replace('\n', '')
-    t = TextTree(all_text)
+    return TextTree(all_text)
 
+
+def load_problem(domain, problem_file):
+    t = load_textTree(problem_file)
     if t.root.text.replace(" ", "").lower() != "define":
         raise SyntaxError("Incorrectly formatted PDDL file.")
 
@@ -74,14 +77,7 @@ def load_problem(domain, problem_file):
 
 
 def load_domain(domain_file):
-    all_text = ""
-    with open(domain_file, "r") as df:
-        lines = df.readlines()
-        lines = strip_comments(lines)
-        all_text = ''.join(lines)
-    all_text = all_text.replace('\r', '').replace('\n', '')
-    t = TextTree(all_text)
-
+    t = load_textTree(domain_file)
     if t.root.text.replace(" ", "").lower() != "define":
         raise SyntaxError("Incorrectly formatted PDDL file.")
 
