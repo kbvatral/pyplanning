@@ -79,9 +79,20 @@ class TypeTree:
             node = fringe.pop(0)
             if node.t == t:
                 return node
-            for child in node.children:
-                fringe.append(child)
+            fringe += node.children
         return None
+
+    def get_all_children(self, t):
+        node = self.find_type(t)
+        if node is None:
+            return []
+        all_types = []
+        fringe = [node]
+        while len(fringe) != 0:
+            node = fringe.pop(0)
+            all_types.append(node.t)
+            fringe += node.children
+        return all_types
             
 class TypeTreeNode:
     def __init__(self, t):

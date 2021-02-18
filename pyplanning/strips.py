@@ -44,6 +44,14 @@ class Problem:
     def check_goal(self, state):
         return state.query(self.goal_state)
 
+    def get_typed_objs(self, t):
+        all_types = self.domain.types.get_all_children(t)
+        all_objs = []
+        for c in all_types:
+            if c in self.objects:
+                all_objs += self.objects[c]
+        return all_objs
+
 
 class KnowledgeState:
     def __init__(self, knowledge=[]):

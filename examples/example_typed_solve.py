@@ -4,7 +4,7 @@ import time
 import math
 
 
-domain, problem = pp.load_pddl("examples/pddl_files/typing/blocksworld.pddl", "examples/pddl_files/typing/stack-blocks.pddl")
+domain, problem = pp.load_pddl("pddl_files/typing/blocksworld.pddl", "pddl_files/typing/stack-blocks.pddl")
 
 tic = time.time()
 plan = pp.solvers.search_plan(problem)

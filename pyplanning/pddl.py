@@ -67,7 +67,7 @@ def load_problem(domain, problem_file):
                 else:
                     objs.append(o)
             if len(objs) != 0:
-                objects["object"] = objs
+                objects[None] = objs
         elif text_split[0].lower() == ":init":
             initial = []
             for pred in child.children:
