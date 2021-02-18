@@ -1,12 +1,11 @@
 (define (problem stack_blocks) (:domain blocksworld)
     (:objects 
-        A B C T
+        A B C - block
+        T - table
     )
 
     (:init
         (On A T) (On B T) (On C A)
-        (Block A) (Block B) (Block C)
-        (Table T)
         (Clear B) (Clear C)
     )
 

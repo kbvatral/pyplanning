@@ -4,7 +4,8 @@ import time
 import math
 
 domain = pp.pddl.load_domain("examples/pddl_files/typing/blocksworld.pddl")
-print(domain)
+problem = pp.pddl.load_problem(domain, "examples/pddl_files/typing/stack-blocks.pddl")
+print(problem)
 #domain, problem = pp.load_pddl("pddl_files/typing/blocksworld.pddl", "pddl_files/typing/stack-blocks.pddl")
 
 # tic = time.time()

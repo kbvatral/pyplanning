@@ -40,7 +40,7 @@ def load_problem(domain, problem_file):
         raise SyntaxError("Incorrectly formatted PDDL file.")
 
     problem_name = ""
-    objects = []
+    objects = {}
     initial_state = KnowledgeState()
     goal_state = None
 
@@ -55,11 +55,23 @@ def load_problem(domain, problem_file):
                 raise SyntaxError(
                     "Domain supplied in problem file does not match the domain supplied in the domain file.")
         elif text_split[0].lower() == ":objects":
-            objects = text_split[1:]
+            objs = []
+            skip_next = True
+            for i, o in enumerate(text_split):
+                if skip_next:
+                    skip_next = False
+                elif o == "-":
+                    objects[text_split[i+1]] = objs
+                    objs = []
+                    skip_next = True
+                else:
+                    objs.append(o)
+            if len(objs) != 0:
+                objects["object"] = objs
         elif text_split[0].lower() == ":init":
             initial = []
             for pred in child.children:
-                i = Predicate.from_str(pred.text)
+                i = grounded_pred_from_str(pred.text, domain.predicates.values())
                 if i.check_grounded():
                     initial.append(i)
                 else:
@@ -67,7 +79,7 @@ def load_problem(domain, problem_file):
                         "Initial state must be completely grounded.")
             initial_state = initial_state.teach(initial)
         elif text_split[0].lower() == ":goal":
-            goal_state = process_proposition_nodes(child.children[0])
+            goal_state = process_proposition_nodes(child.children[0], domain.predicates.values())
             if not goal_state.check_grounded():
                 raise SyntaxError("Goal state must be completely grounded.")
         else:

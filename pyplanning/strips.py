@@ -38,9 +38,7 @@ class Problem:
         self.domain = domain
         self.initial_state = initial_state
         self.goal_state = goal_state
-        self.objects = set(objects)
-        if len(self.objects) != len(objects):
-            raise Warning("Objects with duplicate names were removed.")
+        self.objects = objects
 
     def check_goal(self, state):
         return state.query(self.goal_state)
