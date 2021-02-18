@@ -1,6 +1,6 @@
 from .logic import AND, NOT, OR, Predicate
 from .action import Action
-from .utils import TextTree
+from .utils import TextTree, TypeTree
 import re
 from .strips import Domain, KnowledgeState, Problem
 
@@ -96,7 +96,7 @@ def load_domain(domain_file):
     domain_name = ""
     predicates = []
     actions = []
-    types = {"object"}
+    types = TypeTree()
 
     for child in t.root.children:
         text_split = list(filter(None, child.text.split()))
@@ -109,8 +109,19 @@ def load_domain(domain_file):
                     raise NotImplementedError(
                         "The requirement '{}' is not yet supported.".format(req))
         elif text_split[0].lower() == ":types":
-            for t in text_split[1:]:
-                types.add(t.lower())
+            tps = []
+            skip_next = True
+            for i, t in enumerate(text_split):
+                if skip_next:
+                    skip_next = False
+                elif t == "-":
+                    types.add_types(tps, text_split[i+1])
+                    tps = []
+                    skip_next = True
+                else:
+                    tps.append(t)
+            if len(tps) != 0:
+                types.add_types(tps)
         elif text_split[0].lower() == ":predicates":
             for pred in child.children:
                 predicates.append(Predicate.from_str(pred.text))
@@ -128,7 +139,7 @@ def load_domain(domain_file):
                     for p in params:
                         splits = p.split("-")
                         pname = splits[0]
-                        ptype = splits[1] if len(splits) == 2 else "object"
+                        ptype = splits[1] if len(splits) == 2 else None
                         parameters.append((pname, ptype))
                 elif item.lower() == ":precondition":
                     precondition = process_proposition_nodes(child.children[i], predicates)
@@ -142,8 +153,7 @@ def load_domain(domain_file):
         else:
             raise SyntaxError("Unrecognized keyword: {}".format(text_split[0]))
 
-    print(types)
-    return Domain(domain_name, predicates, actions)
+    return Domain(domain_name, types, predicates, actions)
 
 
 def process_proposition_nodes(t, predicates):

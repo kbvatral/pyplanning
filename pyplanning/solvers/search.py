@@ -31,7 +31,9 @@ def __asearch(problem: Problem, start_state, heuristic=null_heuristic, delete_me
 def __generate_next_states(problem: Problem, state: KnowledgeState, delete_method="delete"):
     next_states = []
     for a_name, a in problem.domain.actions.items():
-        for objs in itertools.permutations(problem.objects, a.num_params):
+        for objs in itertools.product(*[problem.objects[t] for t in a.types]):
+            if len(set(objs)) != len(objs):
+                continue
             res, next_ks = a.take_action(state, objs, delete_method)
             if res:
                 next_states.append((a.ground(objs), next_ks))

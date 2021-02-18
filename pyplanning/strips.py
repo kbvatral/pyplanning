@@ -4,8 +4,9 @@ from .action import Action
 
 
 class Domain:
-    def __init__(self, name, predicates, actions):
+    def __init__(self, name, types, predicates, actions):
         self.name = name
+        self.types = types
         self.predicates = dict()
         for p in predicates:
             if not isinstance(p, Predicate):

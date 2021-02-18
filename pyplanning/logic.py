@@ -57,7 +57,7 @@ class Predicate(Proposition):
         else:
             raise TypeError(
                 "Expected argument `objects` to be an Interable type.")
-        return Predicate(self.name, self.variables, new_grounding)
+        return Predicate(self.name, list(zip(self.variables, self.types)), new_grounding)
 
     @staticmethod
     def from_str(s):
