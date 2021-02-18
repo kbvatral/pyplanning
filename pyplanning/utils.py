@@ -59,3 +59,46 @@ class PriorityQueue:
     def pop(self):
         _, _, item = heapq.heappop(self.fringe)
         return item
+
+class TypeTree:
+    def __init__(self):
+        self.root = TypeTreeNode(None)
+
+    def add_types(self, types, parent_type=None):
+        for t in types:
+            node = TypeTreeNode(t)
+            parent_node = self.find_type(parent_type)
+            if parent_node is None:
+                parent_node = TypeTreeNode(parent_type)
+                self.root.add_child(parent_node)
+            parent_node.add_child(node)
+
+    def find_type(self, t):
+        fringe = [self.root]
+        while len(fringe) != 0:
+            node = fringe.pop(0)
+            if node.t == t:
+                return node
+            fringe += node.children
+        return None
+
+    def get_all_children(self, t):
+        node = self.find_type(t)
+        if node is None:
+            return []
+        all_types = []
+        fringe = [node]
+        while len(fringe) != 0:
+            node = fringe.pop(0)
+            all_types.append(node.t)
+            fringe += node.children
+        return all_types
+            
+class TypeTreeNode:
+    def __init__(self, t):
+        self.t = t
+        self.children = []
+    def add_child(self, c):
+        self.children.append(c)
+    def __repr__(self) -> str:
+        return str(self.t)

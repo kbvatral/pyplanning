@@ -1,3 +1,9 @@
+;;
+;; PDDL file for a robot gripper toy domain.
+;; Generally, we have n balls and a robot with two arms
+;; with problems defined by moving the balls
+;;
+
 (define (domain gripper)
     (:requirements :strips)
 

@@ -1,11 +1,12 @@
 from typing import Iterable
-from .logic import AND, NOT, OR, Predicate, GroundedPredicate, Proposition
+from .logic import AND, NOT, OR, Predicate, Proposition
 from .action import Action
 
 
 class Domain:
-    def __init__(self, name, predicates, actions):
+    def __init__(self, name, types, predicates, actions):
         self.name = name
+        self.types = types
         self.predicates = dict()
         for p in predicates:
             if not isinstance(p, Predicate):
@@ -38,12 +39,18 @@ class Problem:
         self.domain = domain
         self.initial_state = initial_state
         self.goal_state = goal_state
-        self.objects = set(objects)
-        if len(self.objects) != len(objects):
-            raise Warning("Objects with duplicate names were removed.")
+        self.objects = objects
 
     def check_goal(self, state):
         return state.query(self.goal_state)
+
+    def get_typed_objs(self, t):
+        all_types = self.domain.types.get_all_children(t)
+        all_objs = []
+        for c in all_types:
+            if c in self.objects:
+                all_objs += self.objects[c]
+        return all_objs
 
 
 class KnowledgeState:
@@ -62,9 +69,9 @@ class KnowledgeState:
         new_knowledge = set(self.knowledge)
 
         for prop in p:
-            if isinstance(prop, GroundedPredicate):
+            if isinstance(prop, Predicate) and prop.check_grounded():
                 new_knowledge.add(prop)
-            elif isinstance(prop, NOT) and isinstance(prop.prop, GroundedPredicate):
+            elif isinstance(prop, NOT) and isinstance(prop.prop, Predicate) and prop.check_grounded():
                 if delete_method.lower() == "delete":
                     if prop.prop in self.knowledge:
                         new_knowledge.remove(prop.prop)
@@ -76,11 +83,11 @@ class KnowledgeState:
                     raise ValueError(
                         "Unrecognized delete method. Method must be one of 'delete', 'add', or 'ignore'.")
             else:
-                raise TypeError("p must be a list of GroundedPredicate.")
+                raise TypeError("p must be a list of fully grounded Predicates.")
         return KnowledgeState(new_knowledge)
 
     def query(self, q):
-        if isinstance(q, GroundedPredicate):
+        if isinstance(q, Predicate) and q.check_grounded():
             return (q in self.knowledge)
         elif isinstance(q, AND):
             for prop in q.props:
@@ -96,7 +103,7 @@ class KnowledgeState:
             return not self.query(q.prop)
         else:
             raise TypeError(
-                "Query must be a combination of grounded propositional classes.")
+                "Query must be a combination of fully grounded propositional classes.")
 
     def __repr__(self):
         return str(self.knowledge)
