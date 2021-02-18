@@ -4,7 +4,7 @@ from .utils import TextTree
 import re
 from .strips import Domain, KnowledgeState, Problem
 
-supported_requirements = {":strips"}
+supported_requirements = {":strips", ":typing", ":disjunctive-preconditions"}
 
 
 def load_pddl(domain_file, problem_file):
@@ -84,6 +84,8 @@ def load_domain(domain_file):
     domain_name = ""
     predicates = []
     actions = []
+    types = {"object"}
+
     for child in t.root.children:
         text_split = list(filter(None, child.text.split()))
 
@@ -94,6 +96,9 @@ def load_domain(domain_file):
                 if req.lower() not in supported_requirements:
                     raise NotImplementedError(
                         "The requirement '{}' is not yet supported.".format(req))
+        elif text_split[0].lower() == ":types":
+            for t in text_split[1:]:
+                types.add(t.lower())
         elif text_split[0].lower() == ":predicates":
             for pred in child.children:
                 predicates.append(Predicate.from_str(pred.text))
@@ -107,11 +112,16 @@ def load_domain(domain_file):
                     ws_pattern = re.compile(r'\s+')
                     params = list(
                         filter(None, re.sub(ws_pattern, '', child.children[i].text).split("?")))
-                    parameters = params
+                    parameters = []
+                    for p in params:
+                        splits = p.split("-")
+                        pname = splits[0]
+                        ptype = splits[1] if len(splits) == 2 else "object"
+                        parameters.append((pname, ptype))
                 elif item.lower() == ":precondition":
-                    precondition = process_proposition_nodes(child.children[i])
+                    precondition = process_proposition_nodes(child.children[i], predicates)
                 elif item.lower() == ":effect":
-                    effect = process_proposition_nodes(child.children[i])
+                    effect = process_proposition_nodes(child.children[i], predicates)
                 else:
                     raise SyntaxError(
                         "Unrecognized keyword in action definition: {}".format(item))
@@ -120,19 +130,57 @@ def load_domain(domain_file):
         else:
             raise SyntaxError("Unrecognized keyword: {}".format(text_split[0]))
 
+    print(types)
     return Domain(domain_name, predicates, actions)
 
 
-def process_proposition_nodes(t):
+def process_proposition_nodes(t, predicates):
     txt = t.text.replace(" ", "").lower()
     if txt == "and":
-        return AND([process_proposition_nodes(c) for c in t.children])
+        return AND([process_proposition_nodes(c, predicates) for c in t.children])
     elif txt == "or":
-        return OR([process_proposition_nodes(c) for c in t.children])
+        return OR([process_proposition_nodes(c, predicates) for c in t.children])
     elif txt == "not":
         if len(t.children) != 1:
             raise SyntaxError(
                 "Incorrect number of arguments for NOT statement.")
-        return NOT(process_proposition_nodes(t.children[0]))
+        return NOT(process_proposition_nodes(t.children[0], predicates))
     else:
-        return Predicate.from_str(t.text)
+        return grounded_pred_from_str(t.text, predicates)
+
+def grounded_pred_from_str(s, predicates):
+    s = s.replace('\r', '').replace('\n', '')
+    pred = list(filter(None, s.split()))
+    if len(pred) < 2:
+        raise ValueError(
+            "Incorrect formatting for PDDL-style predicate string.")
+
+    name = pred[0]
+    pred_match = None
+    for p in predicates:
+        if p.name == name:
+            pred_match = p
+            break
+    if pred_match is None:
+        raise SyntaxError("Predicate not yet defined: {}".format(name))
+    
+    if len(pred[1:]) != len(pred_match.variables):
+        raise SyntaxError("Incorrect number of arguments for the predicate with name {}".format(pred.name))
+    var_names = []
+    grounding = {}
+    for i, p in enumerate(pred[1:]):
+        if p[0] == "?":
+            if len(p) < 2:
+                raise ValueError(
+                    "Incorrect formatting for PDDL-style predicate string.")
+            if (p[1:], pred_match.types[i]) in var_names:
+                raise ValueError("Duplicate variable name found: {}".format(p[1:]))
+            var_names.append((p[1:], pred_match.types[i]))
+        else:
+            vn = "x{}".format(i)
+            if (vn, pred_match.types[i]) in var_names:
+                raise ValueError("Duplicate variable name found: {}".format(vn))
+            var_names.append((vn, pred_match.types[i]))
+            grounding[vn] = p
+    return Predicate(name, var_names, grounding)
+    

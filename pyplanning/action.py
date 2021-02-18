@@ -4,9 +4,12 @@ from .logic import NOT, Proposition, AND, Predicate, OR
 class Action:
     def __init__(self, name, parameters, precondition, effect):
         self.name = name
-        self.parameters = parameters
-        if self.parameters is None:
-            self.parameters = []
+        self.parameters = []
+        self.types = []
+        if parameters is not None:
+            for p, t in parameters:
+                self.parameters.append(p)
+                self.types.append(t)
         self.num_params = len(self.parameters)
 
         if not isinstance(precondition, Proposition) and precondition is not None:

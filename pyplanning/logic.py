@@ -11,12 +11,14 @@ class Proposition(ABC):
 
 class Predicate(Proposition):
     def __init__(self, name, variables, grounding={}):
-        if isinstance(variables, str):
-            variables = [variables]
         if len(variables) < 0:
             raise TypeError("Predicates must contain at least one variable.")
         self.name = name
-        self.variables = variables
+        self.variables = []
+        self.types = []
+        for v, t in variables:
+            self.variables.append(v)
+            self.types.append(t)
         self.grounding = grounding
 
     def __repr__(self) -> str:
@@ -59,29 +61,21 @@ class Predicate(Proposition):
 
     @staticmethod
     def from_str(s):
-        s = s.replace('\r', '').replace('\n', '')
-        pred = list(filter(None, s.split()))
+        # remove whitespace with re and potential empty variable names with filter none
+        ws_pattern = re.compile(r'\s+')
+        pred = list(filter(None, re.sub(ws_pattern, '', s).split("?")))
         if len(pred) < 2:
             raise ValueError(
                 "Incorrect formatting for PDDL-style predicate string.")
 
         name = pred[0]
-        var_names = []
-        grounding = {}
-        for i, p in enumerate(pred[1:]):
-            if p[0] == "?":
-                if len(p) < 2:
-                    raise ValueError(
-                        "Incorrect formatting for PDDL-style predicate string.")
-                if p[1:] in var_names:
-                    raise ValueError("Duplicate variable name found.")
-                var_names.append(p[1:])
-            else:
-                vn = "x{}".format(i)
-                var_names.append(vn)
-                grounding[vn] = p
-
-        return Predicate(name, var_names, grounding)
+        variables = []
+        for p in pred[1:]:
+            splits = p.split("-")
+            var_name = splits[0]
+            obj_type = splits[1] if len(splits) == 2 else "object"
+            variables.append((var_name, obj_type))
+        return Predicate(name, variables)
 
 
 class AND(Proposition):
