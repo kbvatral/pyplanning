@@ -1,11 +1,12 @@
 import itertools
 from ..strips import KnowledgeState, Problem
 from ..action import NopAction
+from ..logic import NOT
 
 def graph_plan(problem: Problem):
     grounded_actions = make_grounded_actions(problem)
-
-    state = problem.initial_state
+    initial = make_grounded_preds(problem, problem.initial_state.knowledge)
+    state = KnowledgeState(initial, explicit_delete=True)
     
     valid_actions = []
     for ga in grounded_actions:
@@ -21,6 +22,17 @@ def make_grounded_actions(problem):
             if len(set(objs)) != len(objs):
                 continue
             grounded.append(a.ground(objs))
+    return grounded
+    
+def make_grounded_preds(problem, initial):
+    grounded = set(initial)
+    for p_name, p in problem.domain.predicates.items():
+        for objs in itertools.product(*[problem.get_typed_objs(t) for t in p.types]):
+            if len(set(objs)) != len(objs):
+                continue
+            gp = p.ground(objs)
+            if gp not in grounded:
+                grounded.add(NOT(gp))
     return grounded
 
 class Level:

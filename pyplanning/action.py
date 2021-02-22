@@ -41,11 +41,11 @@ class Action:
         ground_pre = ground_proposition_by_map(self.precondition, mapping)
         return ground_pre
 
-    def process_effects(self, state, objects, delete_method="delete"):
+    def process_effects(self, state, objects):
         if self.effect is None:
             return state.teach([])
         ground_effect = self.ground_effects(objects)
-        return state.teach(ground_effect.props, delete_method)
+        return state.teach(ground_effect.props)
 
     def ground_effects(self, objects):
         if len(objects) != len(self.parameters):
@@ -57,12 +57,12 @@ class Action:
         ground_effect = ground_proposition_by_map(self.effect, mapping)
         return ground_effect
 
-    def take_action(self, state, objects, delete_method="delete"):
+    def take_action(self, state, objects):
         if len(objects) != len(self.parameters):
             raise ValueError("Incorrect number of paramters: expected {}, got {}".format(
                 len(self.parameters), len(objects)))
         if self.check_preconditions(state, objects):
-            return True, self.process_effects(state, objects, delete_method)
+            return True, self.process_effects(state, objects)
         return False, state
 
     def ground(self, objects):
@@ -91,8 +91,11 @@ class GroundedAction:
 
 class NopAction(GroundedAction):
     def __init__(self, pred):
+        self.pred = pred
         action = Action("Nop", None, AND([pred]), AND([pred]))
         super().__init__(action, [])
+    def __repr__(self) -> str:
+        return "{}({})".format(self.action.name, str(self.pred))
 
 
 def ground_proposition_by_map(prop, variable_map):

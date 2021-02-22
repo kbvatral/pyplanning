@@ -73,7 +73,7 @@ class Predicate(Proposition):
         for p in pred[1:]:
             splits = p.split("-")
             var_name = splits[0]
-            obj_type = splits[1] if len(splits) == 2 else "object"
+            obj_type = splits[1] if len(splits) == 2 else None
             variables.append((var_name, obj_type))
         return Predicate(name, variables)
 
