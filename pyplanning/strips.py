@@ -77,6 +77,10 @@ class KnowledgeState:
                         new_knowledge.remove(prop.prop)
                 elif delete_method.lower() == "add":
                     new_knowledge.add(prop)
+                elif delete_method.lower() == "replace":
+                    if prop.prop in self.knowledge:
+                        new_knowledge.remove(prop.prop)
+                    new_knowledge.add(prop)
                 elif delete_method.lower() == "ignore":
                     pass
                 else:
