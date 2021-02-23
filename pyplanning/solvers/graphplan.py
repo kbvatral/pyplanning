@@ -34,17 +34,17 @@ def make_grounded_preds(problem, initial):
 
 
 class Level:
-    def __init__(self, state, actions):
-        self.prev_state = state
-        for prop in self.prev_state.knowledge:
+    def __init__(self, prev_layer, actions):
+        self.prev_layer = prev_layer
+        for prop in self.prev_layer.state.knowledge:
             actions.append(NopAction(prop))
         self.actions = frozenset(actions)
 
         all_effects = set()
         for ga in actions:
             all_effects.update(ga.effects)
-        self.next_state = KnowledgeState(all_effects, True)
-        
+        self.state = KnowledgeState(all_effects, True)
+
         self.action_mutex = set()
         self.get_mutex()
 
@@ -65,19 +65,25 @@ class Level:
                 if (isinstance(p, NOT) and p.prop in actions[1].precondition) or (NOT(p) in actions[1].precondition):
                     self.action_mutex.add(frozenset(actions))
 
+
+class InitialLevel(Level):
+    def __init__(self, state):
+        self.prev_layer = None
+        self.actions = frozenset()
+        self.state = state
+        self.action_mutex = set()
+
+
 class PlanningGraph:
     def __init__(self, problem: Problem):
         self.problem = problem
-        self.levels = []
         self.grounded_actions = make_grounded_actions(problem)
-        initial = make_grounded_preds(problem, problem.initial_state.knowledge)
-        self.init_state = KnowledgeState(initial, explicit_delete=True)
+        self.init_state = KnowledgeState(make_grounded_preds(
+            problem, problem.initial_state.knowledge), explicit_delete=True)
+        self.levels = [InitialLevel(self.init_state)]
 
     def get_current_state(self):
-        if len(self.levels) == 0:
-            return self.init_state
-        curr_level = self.levels[-1]
-        return curr_level.next_state
+        return self.levels[-1].state
 
     def expand_graph(self):
         curr_state = self.get_current_state()
@@ -85,7 +91,7 @@ class PlanningGraph:
         for ga in self.grounded_actions:
             if ga.action.check_preconditions(curr_state, ga.objects):
                 valid_actions.append(ga)
-        level = Level(curr_state, valid_actions)
+        level = Level(self.levels[-1], valid_actions)
         self.levels.append(level)
 
     def check_goal(self):
