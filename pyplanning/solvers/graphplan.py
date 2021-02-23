@@ -46,9 +46,11 @@ class Level:
         self.state = KnowledgeState(all_effects, True)
 
         self.action_mutex = set()
-        self.get_mutex()
+        self.get_action_mutex()
+        self.literal_mutex = set()
+        self.get_literal_mutex()
 
-    def get_mutex(self):
+    def get_action_mutex(self):
         for actions in itertools.combinations(self.actions, 2):
             for e in actions[0].effects:
                 # Inconsisent effects
@@ -62,8 +64,36 @@ class Level:
                 if (isinstance(p, NOT) and p.prop in actions[1].effects) or (NOT(p) in actions[1].effects):
                     self.action_mutex.add(frozenset(actions))
                 # Competing needs
-                if (isinstance(p, NOT) and p.prop in actions[1].precondition) or (NOT(p) in actions[1].precondition):
-                    self.action_mutex.add(frozenset(actions))
+                for p2 in actions[1].precondition:
+                    if frozenset([p, p2]) in self.prev_layer.literal_mutex:
+                        self.action_mutex.add(frozenset(actions))
+                        break
+
+    def get_literal_mutex(self):
+        # Direct mutex (e.g. literal and ~literal)
+        for literal in self.state.knowledge:
+            if isinstance(literal, NOT) and literal.prop in self.state.knowledge:
+                self.literal_mutex.add(frozenset([literal.prop, literal]))
+            elif NOT(literal) in self.state.knowledge:
+                self.literal_mutex.add(frozenset([literal, NOT(literal)]))
+        # Inconsistent support
+        for literals in itertools.combinations(self.state.knowledge, 2):
+            l1_a = self.get_producing_actions(literals[0])
+            l2_a = self.get_producing_actions(literals[1])
+            found = False
+            for action_pair in itertools.product(l1_a, l2_a):
+                if frozenset(action_pair) not in self.action_mutex:
+                    found = True  # non-mutex action pair means literals can be produced
+                    break
+            if not found:
+                self.literal_mutex.add(frozenset(literals))
+
+    def get_producing_actions(self, literal):
+        producing = []
+        for a in self.actions:
+            if literal in a.effects:
+                producing.append(a)
+        return producing
 
 
 class InitialLevel(Level):
@@ -72,6 +102,7 @@ class InitialLevel(Level):
         self.actions = frozenset()
         self.state = state
         self.action_mutex = set()
+        self.literal_mutex = set()
 
 
 class PlanningGraph:
