@@ -1,14 +1,36 @@
 import itertools
 from ..strips import KnowledgeState, Problem
 from ..action import NopAction
-from ..logic import NOT
+from ..logic import AND, NOT
+from ..utils import PriorityQueue
+import copy
 
 
-def graph_plan(problem: Problem):
+def graph_plan(problem: Problem, max_depth=100):
     graph = PlanningGraph(problem)
-    graph.expand_graph()
-    graph.expand_graph()
-    return graph
+    if graph.check_goal():
+        return {}
+    
+    for _ in range(max_depth):
+        graph.expand_graph()
+        if graph.check_goal():
+            plan = backward_search(graph)
+            if plan is not None:
+                return remove_plan_nops(plan)
+
+    raise RuntimeError("Max depth reached in search for a plan.")
+
+
+def remove_plan_nops(plan):
+    new_plan = {}
+    for level, actions in plan.items():
+        new_actions = set()
+        for a in actions:
+            if not isinstance(a, NopAction):
+                new_actions.add(a)
+        if len(new_actions) > 0:
+            new_plan[level] = new_actions
+    return new_plan
 
 
 def make_grounded_actions(problem):
@@ -133,3 +155,61 @@ class PlanningGraph:
                     return False
             return True
         return False
+
+
+def backward_search(graph: PlanningGraph):
+    fringe = PriorityQueue()
+    last_level = len(graph.levels)-1
+    initial_state = (last_level, set(
+        graph.problem.goal_state.props), {last_level: set()})
+    fringe.push(initial_state, last_level)
+
+    while len(fringe) > 0:
+        level, goals, plan = fringe.pop()
+
+        # If we reach the initial state and the preconditions
+        # of the actions at the first level (current goals) are
+        # satisfied, then return the plan. If not satisfied,
+        # continue as initial state cannot be expanded
+        if level == 0:
+            if graph.levels[level].state.query(AND(goals)):
+                return plan
+            else:
+                continue
+
+        # Expand the current state
+        for a in graph.levels[level].actions:
+            good_action = True
+            # Discard action if its in mutex with the current plan
+            for ap in plan[level]:
+                if a == ap or frozenset([a, ap]) in graph.levels[level].action_mutex:
+                    good_action = False
+                    break
+            # Discard action if it does not satisfy any of the current goals
+            if len(set(a.effects).intersection(goals)) == 0:
+                good_action = False
+
+            if good_action:
+                new_goals = goals.copy()
+                for e in a.effects:
+                    new_goals.discard(e)
+
+                new_plan = copy.deepcopy(plan)
+                new_plan[level].add(a)
+                
+                # If we have completed all of the goals for this level, move to
+                # the previous level and create a new set of goals based on the
+                # preconditions of the actions selected for current level
+                if len(new_goals) == 0:
+                    new_level = level - 1
+                    new_plan[new_level] = set()
+                    new_goals = set()
+                    for action in new_plan[level]:
+                        new_goals.update(action.precondition)
+                else:
+                    new_level = level
+
+                fringe.push((new_level, new_goals, new_plan), new_level)
+
+    # No plan found
+    return None
