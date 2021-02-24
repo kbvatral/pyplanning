@@ -126,4 +126,10 @@ class PlanningGraph:
         self.levels.append(level)
 
     def check_goal(self):
-        return self.problem.check_goal(self.get_current_state())
+        base_check = self.problem.check_goal(self.get_current_state())
+        if base_check:
+            for a_pair in itertools.combinations(self.problem.goal_state.props, 2):
+                if frozenset(a_pair) in self.levels[-1].literal_mutex:
+                    return False
+            return True
+        return False
