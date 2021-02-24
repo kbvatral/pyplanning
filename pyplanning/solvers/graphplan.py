@@ -11,7 +11,8 @@ def graph_plan(problem: Problem, max_depth=100):
     if graph.check_goal():
         return {}
     
-    for _ in range(max_depth):
+    for i in range(max_depth):
+        print("Depth {}".format(i+1))
         graph.expand_graph()
         if graph.check_goal():
             plan = backward_search(graph)
@@ -162,7 +163,7 @@ def backward_search(graph: PlanningGraph):
     last_level = len(graph.levels)-1
     initial_state = (last_level, set(
         graph.problem.goal_state.props), {last_level: set()})
-    fringe.push(initial_state, last_level)
+    fringe.push(initial_state, 0)
 
     while len(fringe) > 0:
         level, goals, plan = fringe.pop()
@@ -209,7 +210,7 @@ def backward_search(graph: PlanningGraph):
                 else:
                     new_level = level
 
-                fringe.push((new_level, new_goals, new_plan), new_level)
+                fringe.push((new_level, new_goals, new_plan), 0)
 
     # No plan found
     return None
