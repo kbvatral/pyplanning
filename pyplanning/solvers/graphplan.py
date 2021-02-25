@@ -198,6 +198,7 @@ class PlanningGraph:
                 self.no_goods.add((level, goals))
                 return False, None
 
+        # Use BFS to find a set of actions that achieves the goals
         current_level = self.levels[level]
         fringe = PriorityQueue()
         visited = set()
@@ -222,6 +223,8 @@ class PlanningGraph:
                     plan[level] = action_set
                     return True, plan
             else:
+                # Expand the current action set with any relevant actions
+                # which are not in mutex with the current set
                 goals_remaining = goals.difference(all_effects)
                 for ra in get_relevant_actions(current_level.actions, goals_remaining):
                     if not check_mutex(current_level, action_set, ra):
@@ -229,11 +232,17 @@ class PlanningGraph:
                         if new_set not in visited:
                             fringe.push(new_set)
 
+        # If the fringe is empty without returning,
+        # then we have a no good
         self.no_goods.add((level, goals))
         return False, None
 
 
 def check_mutex(level: Level, action_set, action):
+    """
+    Determines whether an action is mutex with any of the actions
+    in the given set of actions at the given level
+    """
     for a in action_set:
         if frozenset([action, a]) in level.action_mutex:
             return True
@@ -241,6 +250,9 @@ def check_mutex(level: Level, action_set, action):
 
 
 def get_all_effects(action_set):
+    """
+    Returns a set of all effects for the actions in the given set
+    """
     all_effects = set()
     for a in action_set:
         all_effects.update(a.effects)
@@ -248,6 +260,9 @@ def get_all_effects(action_set):
 
 
 def get_all_preconditions(action_set):
+    """
+    Returns a set of all preconditions for the actions in the given set
+    """
     all_precons = set()
     for a in action_set:
         all_precons.update(a.precondition)
@@ -255,6 +270,10 @@ def get_all_preconditions(action_set):
 
 
 def get_relevant_actions(all_actions, goals):
+    """
+    Returns a subset of actions which have at least one of the goals
+    in their effects
+    """
     relevant = []
     for a in all_actions:
         if len(a.effects.intersection(goals)) > 0:
