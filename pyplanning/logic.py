@@ -29,15 +29,24 @@ class Predicate(Proposition):
             else:
                 str_rep += "?{} ".format(v)
         return str_rep[:-1]
+    
+    def hash_str(self) -> str:
+        str_rep = "{} ".format(self.name)
+        for i, v in enumerate(self.variables):
+            if v in self.grounding:
+                str_rep += "{} ".format(self.grounding[v])
+            else:
+                str_rep += "?x{} ".format(i)
+        return str_rep[:-1]
 
     def __hash__(self) -> int:
-        return hash(str(self))
+        return hash(self.hash_str())
 
     def __eq__(self, o) -> bool:
-        # TODO This method of equality is very hacky ans should be updated
+        # TODO This method of equality is very hacky and should be updated
         if type(o) != type(self):
             return False
-        return hash(self) == hash(o)
+        return self.hash_str() == o.hash_str()
 
     def check_grounded(self):
         for n in self.variables:
@@ -58,6 +67,9 @@ class Predicate(Proposition):
             raise TypeError(
                 "Expected argument `objects` to be an Interable type.")
         return Predicate(self.name, list(zip(self.variables, self.types)), new_grounding)
+    
+    def unground(self):
+        return Predicate(self.name, list(zip(self.variables, self.types)))
 
     @staticmethod
     def from_str(s):
@@ -125,7 +137,11 @@ class NOT(Proposition):
         return isinstance(o, NOT) and o.prop == self.prop
 
     def __hash__(self):
-        return hash(str(self))
+        if isinstance(self.prop, Predicate):
+            rep = "NOT({})".format(self.prop.hash_str())
+            return hash(rep)
+        else:
+            return hash(str(self))
 
     def check_grounded(self):
         return self.prop.check_grounded()

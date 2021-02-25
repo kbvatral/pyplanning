@@ -1,7 +1,7 @@
 import itertools
 from ..strips import KnowledgeState, Problem
 from ..action import NopAction
-from ..logic import AND, NOT
+from ..logic import AND, NOT, Predicate
 from ..utils import PriorityQueue
 import copy
 import time
@@ -48,7 +48,7 @@ def remove_plan_nops(plan):
     return new_plan
 
 
-def make_grounded_actions(problem):
+def make_grounded_actions(problem, constant_predicates):
     """
     Make a set of actions grounded in every possible set of literals
     and NopActions for every possible predicate
@@ -61,6 +61,8 @@ def make_grounded_actions(problem):
             grounded.append(a.ground(objs))
 
     for p_name, p in problem.domain.predicates.items():
+        if p in constant_predicates:
+            continue
         for objs in itertools.product(*[problem.get_typed_objs(t) for t in p.types]):
             if len(set(objs)) != len(objs):
                 continue
@@ -84,11 +86,37 @@ def make_grounded_preds(problem, initial):
     return grounded
 
 
+def find_constant_predicates(problem: Problem):
+    constant_predicates = set(problem.domain.predicates.values())
+    for p in problem.domain.predicates.values():
+        constant_predicates.add(NOT(p))
+
+    for a in problem.domain.actions.values():
+        for prop in a.effect.props:
+            constant_predicates.discard(prop)
+            if isinstance(prop, NOT):
+                constant_predicates.discard(prop.prop)
+            else:
+                constant_predicates.discard(NOT(prop))
+    return constant_predicates
+
+
+def find_constant_knowledge(knowledge: KnowledgeState, constant_predicates):
+    constant_knowledge = set()
+    for k in knowledge.knowledge:
+        if isinstance(k, NOT):
+            raw_pred = NOT(k.prop.unground())
+        else:
+            raw_pred = k.unground()
+        if raw_pred in constant_predicates:
+            constant_knowledge.add(k)
+    return constant_knowledge
+
+
 class Level:
     def __init__(self, prev_layer, actions):
         self.prev_layer = prev_layer
         self.actions = frozenset(actions)
-
         all_effects = get_all_effects(actions)
         self.state = KnowledgeState(all_effects, True)
 
@@ -156,15 +184,18 @@ class PlanningGraph:
     def __init__(self, problem: Problem):
         self.problem = problem
         self.goals = frozenset(self.problem.goal_state.props)
-        self.grounded_actions = make_grounded_actions(problem)
         self.init_state = KnowledgeState(make_grounded_preds(
             problem, problem.initial_state.knowledge), explicit_delete=True)
         self.levels = [InitialLevel(self.init_state)]
+        self.constant_predicates = find_constant_predicates(problem)
+        self.constant_knowledge = find_constant_knowledge(self.init_state, self.constant_predicates)
+        self.grounded_actions = make_grounded_actions(problem, self.constant_predicates)
         self.no_goods = set()
         self.no_goods_history = []
 
     def get_current_state(self):
-        return self.levels[-1].state
+        full_knowledge = self.levels[-1].state.knowledge.union(self.constant_knowledge)
+        return KnowledgeState(full_knowledge, True)
 
     def expand_graph(self):
         curr_state = self.get_current_state()
@@ -205,10 +236,18 @@ class PlanningGraph:
             return False
         return (self.no_goods == self.no_goods_history[-1])
 
+    def remove_constant_knowledge(self, k):
+        mutable = k.copy()
+        for pred in k:
+            if pred in self.constant_knowledge:
+                mutable.discard(pred)
+        return mutable
+
     def extract_solution(self):
         last_level = len(self.levels) - 1
         self.no_goods_history.append(self.no_goods.copy())
-        return self.backward_search(last_level, self.goals)
+        g = self.remove_constant_knowledge(self.goals)
+        return self.backward_search(last_level, g)
 
     def backward_search(self, level, goals):
         if (level, goals) in self.no_goods:
@@ -238,6 +277,7 @@ class PlanningGraph:
                 # Found a set of actions that achieves the goals,
                 # now check if the preconditions for those actions are reachable
                 precons = get_all_preconditions(action_set)
+                precons = self.remove_constant_knowledge(precons)
                 res, subplan = self.backward_search(
                     level-1, frozenset(precons))
                 if res:
