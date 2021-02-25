@@ -6,17 +6,19 @@ from ..utils import PriorityQueue
 import copy
 
 
-def graph_plan(problem: Problem, max_depth=100):
+def graph_plan(problem: Problem, max_depth=1000):
     graph = PlanningGraph(problem)
     if graph.check_goal():
         return {}
 
-    for i in range(max_depth):
+    for _ in range(max_depth):
         graph.expand_graph()
         if graph.check_goal():
             res, plan = graph.extract_solution()
             if res:
                 return remove_plan_nops(plan)
+        if graph.check_graph_levelOff() and graph.check_noGood_levelOff():
+            return None # Full planning failure
 
     raise RuntimeError("Max depth reached in search for a plan.")
 
@@ -136,6 +138,7 @@ class PlanningGraph:
             problem, problem.initial_state.knowledge), explicit_delete=True)
         self.levels = [InitialLevel(self.init_state)]
         self.no_goods = set()
+        self.no_goods_history = []
 
     def get_current_state(self):
         return self.levels[-1].state
@@ -158,8 +161,30 @@ class PlanningGraph:
             return True
         return False
 
+    def check_graph_levelOff(self):
+        if len(self.levels) < 2:
+            return False
+
+        curr_level = self.levels[-1]
+        prev_level = self.levels[-2]
+        
+        actions_bool = (curr_level.actions == prev_level.actions)
+        state_bool = (curr_level.state == prev_level.state)
+        action_mutex_bool = (curr_level.action_mutex == prev_level.action_mutex)
+        literal_mutex_bool = (curr_level.literal_mutex == prev_level.literal_mutex)
+
+        if actions_bool and state_bool and action_mutex_bool and literal_mutex_bool:
+            return True
+        return False
+
+    def check_noGood_levelOff(self):
+        if len(self.no_goods_history) < 2:
+            return False
+        return (self.no_goods == self.no_goods_history[-1])
+
     def extract_solution(self):
         last_level = len(self.levels) - 1
+        self.no_goods_history.append(self.no_goods.copy())
         return self.backward_search(last_level, self.goals)
 
     def backward_search(self, level, goals):
