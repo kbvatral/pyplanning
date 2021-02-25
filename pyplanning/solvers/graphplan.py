@@ -4,18 +4,30 @@ from ..action import NopAction
 from ..logic import AND, NOT
 from ..utils import PriorityQueue
 import copy
+import time
 
 
-def graph_plan(problem: Problem, max_depth=1000):
+def graph_plan(problem: Problem, max_depth=1000, print_debug=False):
     graph = PlanningGraph(problem)
     if graph.check_goal():
         return {}
 
     for i in range(max_depth):
-        print("Level {}".format(i+1))
+        if print_debug:
+            print("Level {}".format(i+1))
+
+        tic = time.time()
         graph.expand_graph()
+        toc = time.time()
+        if print_debug:
+            print("\t Expansion Time: %.3f" % (toc - tic))
+
         if graph.check_goal():
+            tic = time.time()
             res, plan = graph.extract_solution()
+            toc = time.time()
+            if print_debug:
+                print("\t Extraction Time: %.3f" % (toc - tic))
             if res:
                 return remove_plan_nops(plan)
         if graph.check_graph_levelOff() and graph.check_noGood_levelOff():
