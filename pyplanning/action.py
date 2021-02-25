@@ -77,8 +77,8 @@ class GroundedAction:
 
         self.action = action
         self.objects = objects
-        self.effects = (action.ground_effects(objects)).props
-        self.precondition = (action.ground_preconditions(objects)).props
+        self.effects = set((action.ground_effects(objects)).props)
+        self.precondition = set((action.ground_preconditions(objects)).props)
 
     def __repr__(self) -> str:
         return "{}({})".format(self.action.name, ", ".join(self.objects))

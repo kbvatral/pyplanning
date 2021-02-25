@@ -257,6 +257,6 @@ def get_all_preconditions(action_set):
 def get_relevant_actions(all_actions, goals):
     relevant = []
     for a in all_actions:
-        if len(set(a.effects).intersection(goals)) > 0:
+        if len(a.effects.intersection(goals)) > 0:
             relevant.append(a)
     return relevant
