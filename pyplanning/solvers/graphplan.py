@@ -11,7 +11,8 @@ def graph_plan(problem: Problem, max_depth=1000):
     if graph.check_goal():
         return {}
 
-    for _ in range(max_depth):
+    for i in range(max_depth):
+        print("Level {}".format(i+1))
         graph.expand_graph()
         if graph.check_goal():
             res, plan = graph.extract_solution()
@@ -205,6 +206,8 @@ class PlanningGraph:
 
         while len(fringe) > 0:
             action_set = fringe.pop()
+            if action_set in visited:
+                continue
             visited.add(action_set)
             all_effects = get_all_effects(action_set)
 
