@@ -145,16 +145,20 @@ class Level:
                         break
 
     def get_literal_mutex(self):
+        producing_actions = {}
         # Direct mutex (e.g. literal and ~literal)
         for literal in self.state.knowledge:
             if isinstance(literal, NOT) and literal.prop in self.state.knowledge:
                 self.literal_mutex.add(frozenset([literal.prop, literal]))
             elif NOT(literal) in self.state.knowledge:
                 self.literal_mutex.add(frozenset([literal, NOT(literal)]))
+            # Cache producing actions for use below
+            producing_actions[literal] = self.get_producing_actions(literal)
+        
         # Inconsistent support
         for literals in itertools.combinations(self.state.knowledge, 2):
-            l1_a = self.get_producing_actions(literals[0])
-            l2_a = self.get_producing_actions(literals[1])
+            l1_a = producing_actions[literals[0]]
+            l2_a = producing_actions[literals[1]]
             found = False
             for action_pair in itertools.product(l1_a, l2_a):
                 if frozenset(action_pair) not in self.action_mutex:
