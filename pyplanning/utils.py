@@ -51,7 +51,7 @@ class PriorityQueue:
     def __len__(self):
         return len(self.fringe)
 
-    def push(self, item, priority):
+    def push(self, item, priority=0):
         item_tuple = (priority, self.fringe_count, item)
         heapq.heappush(self.fringe, item_tuple)
         self.fringe_count += 1

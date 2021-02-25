@@ -4,7 +4,7 @@ from .utils import TextTree, TypeTree
 import re
 from .strips import Domain, KnowledgeState, Problem
 
-supported_requirements = {":strips", ":typing", ":disjunctive-preconditions"}
+supported_requirements = {":strips", ":typing", ":disjunctive-preconditions", ":negative-preconditions"}
 
 
 def load_pddl(domain_file, problem_file):

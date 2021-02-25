@@ -54,8 +54,9 @@ class Problem:
 
 
 class KnowledgeState:
-    def __init__(self, knowledge=[]):
+    def __init__(self, knowledge=[], explicit_delete=False):
         self.knowledge = frozenset(knowledge)
+        self.explicit_delete = explicit_delete
 
     def __eq__(self, o):
         return self.knowledge == o.knowledge
@@ -63,7 +64,7 @@ class KnowledgeState:
     def __hash__(self) -> int:
         return hash(self.knowledge)
 
-    def teach(self, p, delete_method="delete"):
+    def teach(self, p):
         if not isinstance(p, Iterable):
             p = [p]
         new_knowledge = set(self.knowledge)
@@ -72,19 +73,14 @@ class KnowledgeState:
             if isinstance(prop, Predicate) and prop.check_grounded():
                 new_knowledge.add(prop)
             elif isinstance(prop, NOT) and isinstance(prop.prop, Predicate) and prop.check_grounded():
-                if delete_method.lower() == "delete":
+                if self.explicit_delete:
+                    new_knowledge.add(prop)
+                else:
                     if prop.prop in self.knowledge:
                         new_knowledge.remove(prop.prop)
-                elif delete_method.lower() == "add":
-                    new_knowledge.add(prop)
-                elif delete_method.lower() == "ignore":
-                    pass
-                else:
-                    raise ValueError(
-                        "Unrecognized delete method. Method must be one of 'delete', 'add', or 'ignore'.")
             else:
                 raise TypeError("p must be a list of fully grounded Predicates.")
-        return KnowledgeState(new_knowledge)
+        return KnowledgeState(new_knowledge, self.explicit_delete)
 
     def query(self, q):
         if isinstance(q, Predicate) and q.check_grounded():
@@ -100,7 +96,10 @@ class KnowledgeState:
                     return True
             return False
         elif isinstance(q, NOT):
-            return not self.query(q.prop)
+            if self.explicit_delete:
+                return (q in self.knowledge)
+            else:
+                return not self.query(q.prop)
         else:
             raise TypeError(
                 "Query must be a combination of fully grounded propositional classes.")

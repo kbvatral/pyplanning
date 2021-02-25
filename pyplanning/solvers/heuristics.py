@@ -7,9 +7,9 @@ def plan_len(plan):
     else:
         return len(plan)
 
-def ignore_delete_heuristic(problem):
-    from .search import __asearch
-    def h(state):
-        plan = __asearch(problem, state, null_heuristic, "ignore")
-        return plan_len(plan)
-    return h
+# def ignore_delete_heuristic(problem):
+#     from .search import __asearch
+#     def h(state):
+#         plan = __asearch(problem, state, null_heuristic, "ignore")
+#         return plan_len(plan)
+#     return h

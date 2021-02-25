@@ -8,7 +8,7 @@ def search_plan(problem: Problem, heuristic=null_heuristic):
     return __asearch(problem, problem.initial_state, heuristic)
 
 
-def __asearch(problem: Problem, start_state, heuristic=null_heuristic, delete_method="delete"):
+def __asearch(problem: Problem, start_state, heuristic=null_heuristic):
     visited = set()
     fringe = PriorityQueue()
     fringe.push((start_state, []), heuristic(start_state))
@@ -28,13 +28,13 @@ def __asearch(problem: Problem, start_state, heuristic=null_heuristic, delete_me
     return None
 
 
-def __generate_next_states(problem: Problem, state: KnowledgeState, delete_method="delete"):
+def __generate_next_states(problem: Problem, state: KnowledgeState):
     next_states = []
     for a_name, a in problem.domain.actions.items():
         for objs in itertools.product(*[problem.get_typed_objs(t) for t in a.types]):
             if len(set(objs)) != len(objs):
                 continue
-            res, next_ks = a.take_action(state, objs, delete_method)
+            res, next_ks = a.take_action(state, objs)
             if res:
                 next_states.append((a.ground(objs), next_ks))
     return next_states
