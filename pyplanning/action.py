@@ -81,7 +81,7 @@ class GroundedAction:
         self.precondition = set((action.ground_preconditions(objects)).props)
 
     def __repr__(self) -> str:
-        return "{}({})".format(self.action.name, ", ".join(self.objects))
+        return "{}({})".format(self.action.name, ", ".join([str(o) for o in self.objects]))
     def __hash__(self) -> int:
         return hash(str(self))
     def __eq__(self, o: object) -> bool:
