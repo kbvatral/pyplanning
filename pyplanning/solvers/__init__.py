@@ -4,3 +4,4 @@ from .graphplan import graph_plan
 from . import search
 from . import heuristics
 from . import graphplan
+from . import ff
